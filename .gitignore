@@ -1,0 +1,10 @@
+# Specific Files#
+#################
+.DS_Store
+
+# testDataDirectory #
+testData/**/*
+testData
+testData/*
+./test
+
