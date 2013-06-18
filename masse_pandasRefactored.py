@@ -16,13 +16,18 @@ class MasseFrame(wx.Frame):
     """
     title = 'Masse filtering'
     
-    def __init__(self, pulse=False, varLab=False):
+    def __init__(self, df, dp, fn, ci, pulse=False, varLab=False):
         wx.Frame.__init__(self, None, -1, self.title)                
         self.create_main_panel(pulse=pulse, varLab=varLab)
 
         self.calcNum = ["AMP_U"]
         self.calcDen = ["AMP_U", "AMP_S"]
         self.positionLabels = qMSDefs.positionLabels70S
+        self.currentDirectory = os.getcwd()
+        self.dataFrame = df
+        self.datapath = dp
+        self.datafile = fn
+        self.currentISOFile = ci
         
         self.lowCheckNum.SetValue(True)
         self.lowCheckDen.SetValue(True)
@@ -32,7 +37,7 @@ class MasseFrame(wx.Frame):
         self.N15RangeBypass.SetValue('-100 100')
         self.missedRangeBypass.SetValue('0 5')        
         self.rtDiffRangeBypass.SetValue('-0.5 0.5')
-        self.residRangeBypass.SetValue('0 50')
+        self.residRangeBypass.SetValue('0 5000')
         if varLab:
             self.FRC_NXRangeBypass.SetValue('0 1')
         
@@ -69,6 +74,7 @@ class MasseFrame(wx.Frame):
         self.cb_grid = wx.CheckBox(self.panel, wx.ID_ANY, label="Show Grid", style=wx.ALIGN_RIGHT)        
         self.drawButton = wx.Button(self.panel, wx.ID_ANY, "Draw!")
         self.exportButton = wx.Button(self.panel, wx.ID_ANY, "Export")
+        self.openButton = wx.Button(self.panel, wx.ID_ANY, "Open")
         
         self.r70S = wx.RadioButton(self.panel, label="70S", style=wx.RB_GROUP)
         self.r50S = wx.RadioButton(self.panel, label="50S")
@@ -94,18 +100,28 @@ class MasseFrame(wx.Frame):
         self.N15_range_button = wx.Button(self.panel, wx.ID_ANY, "15N PPM cutoff")
         self.missed_range_button = wx.Button(self.panel, wx.ID_ANY, "Missed cleavage cutoff")
         self.rtDiff_range_button = wx.Button(self.panel, wx.ID_ANY, "RT diff cutoff")
+        self.resid_range_button = wx.Button(self.panel, wx.ID_ANY, "residual cutoff")
         if varLab:
             self.FRC_NX_range_button = wx.Button(self.panel, wx.ID_ANY, "FRC_NX")
-        self.resid_range_button = wx.Button(self.panel, wx.ID_ANY, "residual cutoff")
         
         self.ppmDiffRangeBypass = wx.TextCtrl(self.panel, size=(100,-1),style=wx.TE_PROCESS_ENTER)
         self.N14RangeBypass = wx.TextCtrl(self.panel, size=(100,-1),style=wx.TE_PROCESS_ENTER)
         self.N15RangeBypass = wx.TextCtrl(self.panel, size=(100,-1),style=wx.TE_PROCESS_ENTER)
         self.missedRangeBypass = wx.TextCtrl(self.panel, size=(100,-1),style=wx.TE_PROCESS_ENTER)
         self.rtDiffRangeBypass = wx.TextCtrl(self.panel, size=(100,-1),style=wx.TE_PROCESS_ENTER)
+        self.residRangeBypass = wx.TextCtrl(self.panel, size=(100,-1),style=wx.TE_PROCESS_ENTER)
         if varLab:
             self.FRC_NXRangeBypass = wx.TextCtrl(self.panel, size=(100,-1),style=wx.TE_PROCESS_ENTER)
-        self.residRangeBypass = wx.TextCtrl(self.panel, size=(100,-1),style=wx.TE_PROCESS_ENTER)
+
+        self.ppmDiffOn = wx.CheckBox(self.panel, label="ppmDiff")
+        self.N14On = wx.CheckBox(self.panel, label="N14")
+        self.N15On = wx.CheckBox(self.panel, label="N15")
+        self.missedOn = wx.CheckBox(self.panel, label="missed")
+        self.rtOn = wx.CheckBox(self.panel, label="RTDiff")
+        self.residOn = wx.CheckBox(self.panel, label="residuals")
+        if varLab:
+            self.FRC_NXOn = wx.CheckBox(self.panel, label="FRC_NX")
+        
 
         '''lay out the buttons'''
         self.vbox = wx.BoxSizer(wx.VERTICAL)
@@ -123,8 +139,14 @@ class MasseFrame(wx.Frame):
         self.imageToolsBox.Add(self.toolbar, 0, flag=wx.ALIGN_LEFT | wx.ALIGN_CENTER)
         self.imageToolsBox.Add(self.cb_grid, 0, flag=wx.ALIGN_LEFT | wx.ALIGN_CENTER)
         self.imageToolsBox.Add(self.drawButton, 0, flag=wx.ALIGN_LEFT | wx.ALIGN_CENTER)
-        self.imageToolsBox.Add(self.exportButton, 0, flag=wx.ALIGN_LEFT | wx.ALIGN_CENTER)
         self.toolNumBox.Add(self.imageToolsBox, 0, flag=wx.ALIGN_LEFT | wx.ALIGN_CENTER)
+
+        #add open and export buttons
+        self.fileToolsBox = wx.StaticBoxSizer(wx.StaticBox(self.panel,wx.ID_ANY,'file tools'), wx.HORIZONTAL)
+        self.fileToolsBox.Add(self.openButton, 0, flag=wx.ALIGN_LEFT | wx.ALIGN_CENTER)
+        self.fileToolsBox.Add(self.exportButton, 0, flag=wx.ALIGN_LEFT | wx.ALIGN_CENTER)        
+        self.toolNumBox.Add(self.fileToolsBox, 0, flag=wx.ALIGN_LEFT | wx.ALIGN_CENTER)
+        
         #add subunit radio buttons to hbox
         self.subunitBox = wx.StaticBoxSizer(wx.StaticBox(self.panel,wx.ID_ANY,'displaySubunits'), wx.HORIZONTAL)
         self.subunitBox.Add(self.r70S, 0, flag=wx.ALIGN_LEFT | wx.ALIGN_CENTER)
@@ -132,13 +154,16 @@ class MasseFrame(wx.Frame):
         self.subunitBox.Add(self.r30S, 0, flag=wx.ALIGN_LEFT | wx.ALIGN_CENTER)
         self.toolNumBox.Add(self.subunitBox, 0, flag=wx.ALIGN_LEFT | wx.GROW)
         self.toolNumBox.Add(wx.BoxSizer(wx.HORIZONTAL), 1, flag=wx.GROW) #push all remaining to the right
+        
         #add loadP/SaveP buttons
         self.paramBox = wx.StaticBoxSizer(wx.StaticBox(self.panel,wx.ID_ANY,'filterParamters'), wx.HORIZONTAL)
         self.paramBox.Add(self.savePButton, 0, flag=wx.ALIGN_LEFT | wx.ALIGN_CENTER)
         self.paramBox.Add(self.loadPButton, 0, flag=wx.ALIGN_LEFT | wx.ALIGN_CENTER)
         self.toolNumBox.Add(self.paramBox, 0, flag=wx.ALIGN_RIGHT | wx.GROW)
+        
         #add calculate button
         self.toolNumBox.Add(self.calcButton, 0, flag=wx.ALIGN_RIGHT | wx.GROW)
+        
         #add numerator box to hbox
         self.numBox = wx.StaticBoxSizer(wx.StaticBox(self.panel,wx.ID_ANY,'numerator'), wx.HORIZONTAL)
         self.numBox.Add(self.lowCheckNum, 0, flag=wx.ALIGN_RIGHT | wx.ALIGN_CENTER)
@@ -158,7 +183,7 @@ class MasseFrame(wx.Frame):
         self.vbox.Add(self.toolNumBox, 0, flag = wx.GROW)
         
         # Sliders for setting the various cutoffs
-        self.filterBox = wx.StaticBoxSizer(wx.StaticBox(self.panel,wx.ID_ANY,'filters'), wx.HORIZONTAL)
+        self.filterBox = wx.StaticBoxSizer(wx.StaticBox(self.panel,wx.ID_ANY,'filter settings'), wx.HORIZONTAL)
         flags = wx.ALIGN_LEFT | wx.ALIGN_CENTER
         self.filterBox.Add(self.ppmDiff_range_button, 0, flag=flags)
         self.filterBox.Add(self.ppmDiffRangeBypass, 0, flag=flags)
@@ -176,6 +201,19 @@ class MasseFrame(wx.Frame):
         self.filterBox.Add(self.resid_range_button, 0, flag=flags)
         self.filterBox.Add(self.residRangeBypass, 0, flag = flags)
         self.vbox.Add(self.filterBox, 0, flag = wx.ALIGN_LEFT | wx.TOP)
+        
+        # Filters on/off checks
+        self.controlFilters = wx.StaticBoxSizer(wx.StaticBox(self.panel,wx.ID_ANY,'filter on/off'), wx.HORIZONTAL)
+        flags = wx.ALIGN_RIGHT | wx.ALIGN_CENTER
+        self.controlFilters.Add(self.ppmDiffOn, 0, flag=flags)
+        self.controlFilters.Add(self.N14On, 0, flag=flags)
+        self.controlFilters.Add(self.N15On, 0, flag=flags)
+        self.controlFilters.Add(self.missedOn, 0, flag=flags)
+        self.controlFilters.Add(self.rtOn, 0, flag=flags)
+        self.controlFilters.Add(self.residOn, 0, flag = flags)
+        if varLab:
+            self.controlFilters.Add(self.FRC_NXOn, 0, flag=flags)
+        self.vbox.Add(self.controlFilters, 0, flag = wx.ALIGN_LEFT | wx.TOP)
 
         self.panel.SetSizer(self.vbox)
         self.vbox.Fit(self)
@@ -188,6 +226,7 @@ class MasseFrame(wx.Frame):
 
         self.drawButton.Bind(wx.EVT_BUTTON, self.on_draw_button)
         self.exportButton.Bind(wx.EVT_BUTTON, self.on_export_button)
+        self.openButton.Bind(wx.EVT_BUTTON, self.on_open_button)
         self.calcButton.Bind(wx.EVT_BUTTON, self.on_calc_button)
         self.cb_grid.Bind(wx.EVT_CHECKBOX, self.on_cb_grid)
         
@@ -199,12 +238,21 @@ class MasseFrame(wx.Frame):
         self.N15_range_button.Bind(wx.EVT_BUTTON, self.on_N15_range_button)
         self.missed_range_button.Bind(wx.EVT_BUTTON, self.on_missed_range_button)
         self.rtDiff_range_button.Bind(wx.EVT_BUTTON, self.on_rtDiff_range_button)
+        self.resid_range_button.Bind(wx.EVT_BUTTON, self.on_resid_range_button)
         if varLab:
             self.FRC_NX_range_button.Bind(wx.EVT_BUTTON, self.on_FRC_NX_range_button)
-        self.resid_range_button.Bind(wx.EVT_BUTTON, self.on_resid_range_button)
+        
+        self.ppmDiffOn.Bind(wx.EVT_CHECKBOX, self.on_ppmDiffOn)
+        self.N14On.Bind(wx.EVT_CHECKBOX, self.on_N14On)
+        self.N15On.Bind(wx.EVT_CHECKBOX, self.on_N15On)
+        self.missedOn.Bind(wx.EVT_CHECKBOX, self.on_missedOn)
+        self.rtOn.Bind(wx.EVT_CHECKBOX, self.on_rtOn)
+        self.residOn.Bind(wx.EVT_CHECKBOX, self.on_residOn)
+        if varLab:
+            self.FRC_NXOn.Bind(wx.EVT_CHECKBOX, self.on_FRC_NXOn)
 
     def on_loadP_button(self, event):
-        f = open(datapath+'_last.filterParam', 'r')
+        f = open(self.datapath+'_last.filterParam', 'r')
         params = csv.reader(f)
         pdict = {}
         for l in params:
@@ -263,43 +311,104 @@ class MasseFrame(wx.Frame):
             outstr = outstr + '\nmidDen,' + str(self.midCheckDen.IsChecked())
         outstr = outstr + '\nhighDen,' + str(self.highCheckDen.IsChecked())
 
-        f = open(datapath+'_last.filterParam', 'w')
+        f = open(self.datapath+'_last.filterParam', 'w')
         f.write(outstr)
         f.close()
     def onr70S_select(self, event):
-        dataFrame['currentPos'] = dataFrame['70Spos']
+        self.dataFrame['currentPos'] = self.dataFrame['70Spos']
         self.positionLabels = qMSDefs.positionLabels70S
         self.draw_figure()     
     def onr50S_select(self, event):
-        dataFrame['currentPos'] = dataFrame['50Spos']        
+        self.dataFrame['currentPos'] = self.dataFrame['50Spos']        
         self.positionLabels = qMSDefs.positionLabels50S
         self.draw_figure()     
     def onr30S_select(self, event):
-        dataFrame['currentPos'] = dataFrame['30Spos']
+        self.dataFrame['currentPos'] = self.dataFrame['30Spos']
         self.positionLabels = qMSDefs.positionLabels30S
         self.draw_figure()
 
+    def on_open_button(self, event):
+        """
+        Create and show the Open FileDialog
+        """
+        wildcard =  "Massacre iso_csv file (*_iso.csv)|*_iso.csv|"\
+                    "Preprocessed _iso_res.csv file (*_iso_res.csv)|*_iso_res.csv|"\
+                    "All files (*.*)|*.*|"
+        dlg = wx.FileDialog(
+            self, message="Choose a file",
+            defaultDir=self.currentDirectory, 
+            defaultFile="",
+            wildcard=wildcard,
+            style=wx.OPEN | wx.CHANGE_DIR
+            )
+        
+        if dlg.ShowModal() == wx.ID_OK:
+            fullname = dlg.GetPaths()[0].split('/')
+            dp = '/'.join(fullname[:-1]) + '/'
+            self.currentDirectory = dp
+            fn = fullname[-1]
+            [df, ci, p, vl] = openFile(dp+fn)
+            startApp(df, dp, fn, ci, p, vl)
+
+        dlg.Destroy()
     def on_export_button(self, event):
-        print "add export code"
+        """
+        Create and show the Save FileDialog
+        """
+        wildcard =  "Filtered _iso_res_filt.csv file (*_iso_res_filt.csv)|*_iso_res_filt.csv|"\
+                    "All files (*.*)|*.*|"
+        defFile = self.datafile[:-4]+'_filt.csv'
+        dlg = wx.FileDialog(
+            self, message="Save file as ...", 
+            defaultDir=self.currentDirectory, 
+            defaultFile=defFile, wildcard=wildcard, style=wx.SAVE
+            )
+        if dlg.ShowModal() == wx.ID_OK:
+            path = dlg.GetPath()
+            savedPoints = self.getPass(True)
+            savedPoints.to_csv(path, index=False)
+        dlg.Destroy()
     def on_cb_grid(self, event):
         self.draw_figure()
     def on_ppmDiff_range_button(self, event):
-        self.draw_hist("ppmDiff", dataFrame['ppmDiff'], self.getPass(True)['ppmDiff'])
+        self.draw_hist("ppmDiff", self.dataFrame['ppmDiff'], self.getPass(True)['ppmDiff'])
+        self.draw_figure()
     def on_N14_range_button(self, event):
-        self.draw_hist("n14", dataFrame['ppm_n14'], self.getPass(True)['ppm_n14'])
+        self.draw_hist("n14", self.dataFrame['ppm_n14'], self.getPass(True)['ppm_n14'])
+        self.draw_figure()
     def on_N15_range_button(self, event):
-        self.draw_hist("n15", dataFrame['ppm_n15'], self.getPass(True)['ppm_n15'])
+        self.draw_hist("n15", self.dataFrame['ppm_n15'], self.getPass(True)['ppm_n15'])
+        self.draw_figure()
     def on_missed_range_button(self, event):
-        self.draw_hist("missed", dataFrame['missed'], self.getPass(True)['missed'])
+        self.draw_hist("missed", self.dataFrame['missed'], self.getPass(True)['missed'])
+        self.draw_figure()
     def on_rtDiff_range_button(self, event):
-        self.draw_hist("rtDiff", dataFrame['rtDiff'], self.getPass(True)['rtDiff'])
+        self.draw_hist("rtDiff", self.dataFrame['rtDiff'], self.getPass(True)['rtDiff'])
+        self.draw_figure()
     def on_FRC_NX_range_button(self, event):
-        self.draw_hist("frac_NX", dataFrame['FRC_NX'], self.getPass(True)['FRC_NX'])
+        self.draw_hist("frac_NX", self.dataFrame['FRC_NX'], self.getPass(True)['FRC_NX'])
+        self.draw_figure()
     def on_resid_range_button(self, event):
-        self.draw_hist("resid", dataFrame['resid'], self.getPass(True)['resid'])
-        #calcResidual()
+        self.draw_hist("resid", self.dataFrame['resid'], self.getPass(True)['resid'])
+        self.draw_figure()
     def on_calc_button(self, event):
         self.calc_data()
+        self.draw_figure()
+    def on_ppmDiffOn(self, event):
+        self.draw_figure()
+    def on_N14On(self, event):
+        self.draw_figure()
+    def on_N15On(self, event):
+        self.draw_figure()
+    def on_missedOn(self, event):
+        self.draw_figure()
+    def on_rtOn(self, event):
+        self.draw_figure()
+    def on_residOn(self, event):
+        self.draw_figure()
+    def on_FRC_NXOn(self, event):
+        self.draw_figure()
+
     def on_draw_button(self, event):
         self.draw_figure()
         
@@ -321,47 +430,34 @@ class MasseFrame(wx.Frame):
         dlg.ShowModal()
         dlg.Destroy()
         
-    def on_save_plot(self, event):
-        file_choices = "PNG (*.png)|*.png"
-        
-        dlg = wx.FileDialog(
-            self, 
-            message="Save plot as...",
-            defaultDir=os.getcwd(),
-            defaultFile="plot.png",
-            wildcard=file_choices,
-            style=wx.SAVE)
-            
-        if dlg.ShowModal() == wx.ID_OK:
-            path = dlg.GetPath()
-            self.canvasLeft.print_figure(path, dpi=self.dpi)
-            self.flash_status_message("Saved to %s" % path)
-            
     def on_exit(self, event):
         self.Destroy()
     
     def draw_fit(self):
-        img=pylab.imread(getPNG(datapath, currentISOFile))
+        img=pylab.imread(getPNG(self.datapath, self.currentISOFile))
         self.PNGPlot.imshow(img)
-        self.PNGPlot.set_title(currentISOFile)
+        self.PNGPlot.set_title(self.currentISOFile)
         self.canvasRight.draw()
 
     def calc_data(self):
         self.UID_output_list = []  
         self.calcNum = self.getChecksNum()
         self.calcDen = self.getChecksDen()
-        dataFrame['currentCalc'] = qMS.calcValueDF(dataFrame, self.calcNum, self.calcDen)
+        self.dataFrame['currentCalc'] = qMS.calcValueDF(self.dataFrame, self.calcNum, self.calcDen)
         self.draw_figure()
             
     def draw_figure(self):
         self.PLPlot.clear()
         self.PLPlot.grid(self.cb_grid.IsChecked())
-        self.PLPlot.plot(self.getPass(True)['currentPos'], self.getPass(True)['currentCalc'], 'ro')
-        self.PLPlot.plot(self.getPass(False)['currentPos']+0.25, self.getPass(False)['currentCalc'], 'bo')
-        self.PLPlot.set_xticks(range(1,int(dataFrame['currentPos'].max())))
+        savedPoints = self.getPass(True)
+        filteredPoints = self.getPass(False)
+        self.PLPlot.plot(savedPoints['currentPos'], savedPoints['currentCalc'], 'ro')
+        self.PLPlot.plot(filteredPoints['currentPos']+0.25, filteredPoints['currentCalc'], 'bo')
+        self.PLPlot.set_xticks(range(1,int(self.dataFrame['currentPos'].max())))
         self.PLPlot.set_xticklabels(self.positionLabels, rotation=90, size='small')
-        self.PLPlot.set_title(datafile + " : " + setCurrentFrac(self.calcNum, self.calcDen))
-        self.PLPlot.set_xlim([0,dataFrame['currentPos'].max()])
+        self.PLPlot.set_title(self.datafile + " : " + setCurrentFrac(self.calcNum, self.calcDen))
+        self.PLPlot.set_xlim([0,self.dataFrame['currentPos'].max()])
+        self.PLPlot.legend(('Saved', 'Filtered'))
         self.canvasLeft.draw()
 
     def draw_hist(self, name, dataAll, dataSelected):
@@ -402,21 +498,40 @@ class MasseFrame(wx.Frame):
         (ppm_n15_low, ppm_n15_high) = map(float, self.N15RangeBypass.GetValue().split(' '))
         (missed_low, missed_high) = map(float, self.missedRangeBypass.GetValue().split(' '))
         (rtDiff_low, rtDiff_high) = map(float, self.rtDiffRangeBypass.GetValue().split(' '))
+        (resid_low, resid_high) = map(float, self.residRangeBypass.GetValue().split(' '))
+        self.ppmDiffOn.SetValue(True)
+        self.N14On.SetValue(True)
+        self.N15On.SetValue(True)
+        self.missedOn.SetValue(True)
+        self.rtOn.SetValue(True)
+        self.residOn.SetValue(True)
+        usePpm = self.ppmDiffOn.IsChecked()
+        useN14 = self.N14On.IsChecked()
+        useN15 = self.N15On.IsChecked()
+        useMissed = self.missedOn.IsChecked()
+        useRTDiff = self.rtOn.IsChecked()
+        useResid = self.residOn.IsChecked()
+        if usePpm:
+            filt =  (self.dataFrame['ppmDiff'] >= ppmDiff_low) & (self.dataFrame['ppmDiff'] <= ppmDiff_high) 
+        if useN14:
+            filt = filt & (self.dataFrame['ppm_n14'] >= ppm_n14_low) & (self.dataFrame['ppm_n14'] <= ppm_n14_high)
+        if useN15:
+            filt = filt & (self.dataFrame['ppm_n15'] >= ppm_n15_low) & (self.dataFrame['ppm_n15'] <= ppm_n15_high)
+        if useMissed:
+            filt = filt & (self.dataFrame['missed'] >= missed_low) & (self.dataFrame['missed'] <= missed_high)
+        if useRTDiff:
+            filt = filt & (self.dataFrame['rtDiff'] >= rtDiff_low) & (self.dataFrame['rtDiff'] <= rtDiff_high)
+        if useResid:
+            filt = filt & (self.dataFrame['resid'] >= resid_low) & (self.dataFrame['resid'] <= resid_high)
         if varLab:
             (FRC_NX_low, FRC_NX_high) = map(float, self.FRC_NXRangeBypass.GetValue().split(' '))
-        (resid_low, resid_high) = map(float, self.residRangeBypass.GetValue().split(' '))
-        filt =  (dataFrame['ppmDiff'] >= ppmDiff_low) & (dataFrame['ppmDiff'] <= ppmDiff_high) & \
-                (dataFrame['ppm_n14'] >= ppm_n14_low) & (dataFrame['ppm_n14'] <= ppm_n14_high) & \
-                (dataFrame['ppm_n15'] >= ppm_n15_low) & (dataFrame['ppm_n15'] <= ppm_n15_high) & \
-                (dataFrame['missed'] >= missed_low) & (dataFrame['missed'] <= missed_high) & \
-                (dataFrame['rtDiff'] >= rtDiff_low) & (dataFrame['rtDiff'] <= rtDiff_high) & \
-                (dataFrame['resid'] >= resid_low) & (dataFrame['resid'] <= resid_high)
-        if varLab:
-            filt = filt & (dataFrame['FRC_NX'] >= FRC_NX_low) & (dataFrame['FRC_NX'] <= FRC_NX_high)
+            useVarlab = self.FRC_NXOn.IsChecked()
+            if useVarlab:
+                filt = filt & (self.dataFrame['FRC_NX'] >= FRC_NX_low) & (self.dataFrame['FRC_NX'] <= FRC_NX_high)
         if t:
-            return dataFrame[filt]
+            return self.dataFrame[filt]
         else:
-            return dataFrame[~filt]
+            return self.dataFrame[~filt]
         
 def getPNG(datapath, iso):
     return datapath+iso+'.fit.png'
@@ -433,17 +548,25 @@ def transformValue(inputData, transformData, toTransform, normalizeTo):
     inputTransformed = inputNormOffset*float(inputData.loc[normalizeTo])
     return inputTransformed
 
+def openFile(fullpath):
+    dataFrame = qMS.readIsoCSV(fullpath)
+    if not ('resid' in dataFrame.columns):
+        dataFrame = qMS.preProcessIsoCSV(fullpath, True)
+    
+    pulse = 'AMP_L' in dataFrame.columns
+    varLab = 'FRC_NX' in dataFrame.columns
+    currentISOFile = dataFrame.ix[0]['isofile']
+    return [dataFrame, currentISOFile, pulse, varLab]
+
+def startApp(dataFrame, datapath, filename, currentISOFile, pulse, varLab):
+    app = wx.App()
+    app.frame = MasseFrame(dataFrame, datapath, filename, currentISOFile, pulse=pulse, varLab=varLab)
+    app.frame.Show()
+    app.MainLoop()    
+
 if __name__ == '__main__':
     datapath = '/home/jhdavis/data/2013_03_11-NCMGradients/SingleSpike/S20/'
-    pulse=True
-    varLab=False
-    #datafile = "S20_iso.csv"
-    #qMS.preProcessIsoCSV(datapath+datafile, pulse, False)
-    datafile = "S20_iso_res.csv"
-    dataFrame = qMS.readIsoCSV(datapath+datafile, pulse=pulse, varLab=varLab)
-    currentISOFile = dataFrame.ix[0]['isofile']
-    app = wx.App()
-    app.frame = MasseFrame(pulse, varLab)
-    app.frame.Show()
-    app.MainLoop()
-    
+    filename = "S20_iso_res.csv"
+
+    [dataFrame, currentISOFile, pulse, varLab] = openFile(datapath+filename)
+    startApp(dataFrame, datapath, filename, currentISOFile, pulse, varLab)
