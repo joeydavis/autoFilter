@@ -1,16 +1,28 @@
 import os
 import wx
-import csv
 import numpy
 import matplotlib
+import pandas as pd
+import qMS
 matplotlib.use('WXAgg')
-from matplotlib.figure import Figure
-from matplotlib.backends.backend_wxagg import \
-    FigureCanvasWxAgg as FigCanvas, \
-    NavigationToolbar2WxAgg as NavigationToolbar
-import matplotlib.pyplot as plt
+#from matplotlib.figure import Figure
+#from matplotlib.backends.backend_wxagg import \
+#    FigureCanvasWxAgg as FigCanvas, \
+#    NavigationToolbar2WxAgg as NavigationToolbar
+
+def readCSV(filename):
+    data = qMS.readIsoCSV(filename)
+    return data
+
+if __name__=="__main__":
+    datafile = "bsubmix10_iso.csv"
+    csv = readCSV(datafile)
+    print csv[:3]
+
 
 # 1 - Code to grab the data, setup the relevant dictionaries
+
+'''
 datafile = "bsubmix10_iso.csv"
 picturepath = ""
 
@@ -106,7 +118,7 @@ for protein in list(protein_set):
     temp_protein = temp_peptides[0][2]
 
 protein_index_dict = { item: index for (index, item) in enumerate(list(protein_set)) }
-
+'''
 def outputStatsFile(protein_set, filePrefix, numerator, denominator):
     fileSuffix = "-"
     for i in numerator:
@@ -292,7 +304,7 @@ class BarsFrame(wx.Frame):
 
         self.vbox.Add(self.sliderBox2, 0, flag = wx.ALIGN_LEFT | wx.TOP)
         self.panel.SetSizer(self.vbox)
-        self.vbox.Fit(self)
+        #self.vbox.Fit(self)
         
     def create_status_bar(self):
         self.statusbar = self.CreateStatusBar()
