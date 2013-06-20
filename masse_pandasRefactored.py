@@ -42,7 +42,7 @@ class MasseFrame(wx.Frame):
         if self.varLab:
             self.FRC_NXRangeBypass.SetValue('0 1')
             self.FRC_NXOn.SetValue(True)
-        self.recalcAndDrawAll()
+        self.recalcAndDrawAll(setZero=True)
 
     def create_main_panel(self, df, dp, fn, pulse=False, varLab=False):
         """ Creates the main panel with all the controls on it:
@@ -480,9 +480,14 @@ class MasseFrame(wx.Frame):
         self.calc_fit()
         self.canvasRight.draw()
     
-    def recalcAndDrawAll(self):
+    def recalcAndDrawAll(self, setZero=False):
         self.calc_data()
         self.calcPoints()
+        if setZero is True:
+            self.currentRow = self.savedPoints[0:1]
+            self.currentISOFile = self.currentRow['isofile'].values[0]
+            self.selectedPoint, = self.PLPlot.plot(self.savedPoints['currentPos'].values[0], self.savedPoints['currentCalc'].values[0], 
+                                              'o', ms=30, alpha=4, color='yellow', visible=True)
         self.updateLists()
         self.calc_figure()
         self.calc_hist()
@@ -518,7 +523,6 @@ class MasseFrame(wx.Frame):
         self.PNGPlot.set_xlim(df2[0][0:len(df['dat'])].values.min(), df2[0][0:len(df['dat'])].values.max())
         self.PNGPlot.legend()
         row = self.dataFrame[self.dataFrame['isofile'] == self.currentISOFile]
-        print row
         dataString =    "ppmDiff: " + str(row['ppmDiff'].values[0]) + \
                         "\nN14: " + str(row['ppm_n14'].values[0]) + \
                         "\nN15: " + str(row['ppm_n15'].values[0]) + \
@@ -543,8 +547,8 @@ class MasseFrame(wx.Frame):
         self.filteredListItems.sort()
         self.savedList.Set(self.savedListItems)
         self.filteredList.Set(self.filteredListItems)
-        self.savedList.SetSelection(0)
-        self.currentISOFile = self.savedList.GetStringSelection()
+        self.savedList.SetStringSelection(self.currentISOFile)
+        self.filteredList.SetStringSelection(self.currentISOFile)
             
     def calc_figure(self):
         self.PLPlot.clear()
@@ -558,6 +562,9 @@ class MasseFrame(wx.Frame):
         self.PLPlot.set_xticklabels(self.positionLabels, rotation=90, size='small')
         self.PLPlot.set_title(self.datafile + " : " + setCurrentFrac(self.calcNum, self.calcDen))
         self.PLPlot.set_xlim([0,self.dataFrame['currentPos'].max()])
+        self.selectedPoint.set_visible(True)
+        print self.selectedPoint
+        self.selectedPoint.set_data(self.currentRow['currentPos'].values[0], self.currentRow['currentCalc'].values[0])
         self.PLPlot.legend(('Saved', 'Filtered'))
 
     def calc_hist(self):
@@ -641,9 +648,11 @@ class MasseFrame(wx.Frame):
         thisline = event.artist
         ydata = thisline.get_ydata()
         xdata = thisline.get_xdata()
-        self.currentISOFile = self.dataFrame[   (self.dataFrame['currentCalc'] == ydata[ind][0]) & \
+        self.currentRow = self.dataFrame[   (self.dataFrame['currentCalc'] == ydata[ind][0]) & \
                                                 ((self.dataFrame['currentPos'] == xdata[ind][0]) | \
-                                                (self.dataFrame['currentPos'] == xdata[ind][0]-0.25))]['isofile'].values[0]
+                                                (self.dataFrame['currentPos'] == xdata[ind][0]-0.25))]
+        self.currentISOFile = self.currentRow['isofile'].values[0]
+        
         self.calc_fit()
         self.canvasRight.draw()
         
@@ -686,8 +695,6 @@ def fileOpenStart():
                     "All files (*.*)|*.*|"
         app = wx.App(False)  # Create a new app, don't redirect stdout/stderr to a window.
         frame = wx.Frame(None, wx.ID_ANY, "") # A Frame is a top-level window.
-        #frame.Show(True)     # Show the frame.
-        #app.MainLoop()
         dlg = wx.FileDialog(frame,
             message="Choose a file",
             defaultFile="",
