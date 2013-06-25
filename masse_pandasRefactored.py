@@ -84,15 +84,19 @@ class MasseFrame(wx.Frame):
         self.filteredList = wx.ListBox(self.panel, id=26, choices=[], style=wx.LB_SINGLE, name='Filtered fits')
         
         '''Create the buttons'''
-        self.toolbar = NavigationToolbar(self.canvasLeft)
+        self.toolbarLeft = NavigationToolbar(self.canvasLeft)
+        self.toolbarRight = NavigationToolbar(self.canvasRight)
         
-        self.cb_grid = wx.CheckBox(self.panel, wx.ID_ANY, label="Show Grid", style=wx.ALIGN_RIGHT)        
+        self.cb_grid = wx.CheckBox(self.panel, wx.ID_ANY, label="Grid", style=wx.ALIGN_RIGHT)        
+        self.hideCheck = wx.CheckBox(self.panel, wx.ID_ANY, label="Hide", style=wx.ALIGN_RIGHT)        
+        self.zoomCheck = wx.CheckBox(self.panel, wx.ID_ANY, label="Zoom", style=wx.ALIGN_RIGHT)        
         self.exportButton = wx.Button(self.panel, wx.ID_ANY, "Export")
         self.openButton = wx.Button(self.panel, wx.ID_ANY, "Open")
         
         self.r70S = wx.RadioButton(self.panel, label="70S", style=wx.RB_GROUP)
         self.r50S = wx.RadioButton(self.panel, label="50S")
         self.r30S = wx.RadioButton(self.panel, label="30S")
+        self.rother = wx.RadioButton(self.panel, label="other")
         
         self.savePButton = wx.Button(self.panel, wx.ID_ANY, "Save")
         self.loadPButton = wx.Button(self.panel, wx.ID_ANY, "Load")
@@ -157,48 +161,60 @@ class MasseFrame(wx.Frame):
         self.toolNumBox = wx.BoxSizer(wx.HORIZONTAL)
         
         #add toolbar, draw, grid and exportto hbox
-        self.imageToolsBox = wx.StaticBoxSizer(wx.StaticBox(self.panel,wx.ID_ANY,'image tools'), wx.HORIZONTAL)
-        self.imageToolsBox.Add(self.toolbar, 0, flag=wx.ALIGN_LEFT | wx.ALIGN_CENTER)
-        self.imageToolsBox.Add(self.cb_grid, 0, flag=wx.ALIGN_LEFT | wx.ALIGN_CENTER)
-        self.toolNumBox.Add(self.imageToolsBox, 0, flag=wx.ALIGN_LEFT | wx.ALIGN_CENTER)
+        self.imageToolsBoxL = wx.StaticBoxSizer(wx.StaticBox(self.panel,wx.ID_ANY,'image tools'), wx.HORIZONTAL)
+        
+        self.toolbarSubunits = wx.BoxSizer(wx.VERTICAL)
+        self.toolbarSubunits.Add(self.toolbarLeft, 0, flag=wx.ALIGN_LEFT)
+        self.subunitsBox = wx.BoxSizer(wx.HORIZONTAL)
+        self.subunitsBox.Add(self.r70S, 0, flag=wx.ALIGN_LEFT)
+        self.subunitsBox.Add(self.r50S, 0, flag=wx.ALIGN_LEFT)
+        self.subunitsBox.Add(self.r30S, 0, flag=wx.ALIGN_LEFT)
+        self.subunitsBox.Add(self.rother, 0, flag=wx.ALIGN_LEFT)
+        self.toolbarSubunits.Add(self.subunitsBox, 0, flag=wx.ALIGN_CENTER | wx.ALIGN_CENTER)
+        self.imageToolsBoxL.Add(self.toolbarSubunits, 0, flag=wx.ALIGN_LEFT | wx.ALIGN_CENTER)
+        
+        self.imageCheckToolsBox = wx.BoxSizer(wx.VERTICAL)        
+        self.imageCheckToolsBox.Add(self.cb_grid, 0, flag=wx.ALIGN_RIGHT)
+        self.imageCheckToolsBox.Add(self.hideCheck, 0, flag=wx.ALIGN_RIGHT)
+        self.imageCheckToolsBox.Add(self.zoomCheck, 0, flag=wx.ALIGN_RIGHT)
+        self.imageToolsBoxL.Add(self.imageCheckToolsBox, 0, flag=wx.ALIGN_RIGHT | wx.ALIGN_CENTER)
+        self.toolNumBox.Add(self.imageToolsBoxL, 0, flag=wx.ALIGN_LEFT | wx.ALIGN_CENTER)
 
         #add open and export buttons
-        self.fileToolsBox = wx.StaticBoxSizer(wx.StaticBox(self.panel,wx.ID_ANY,'file tools'), wx.HORIZONTAL)
-        self.fileToolsBox.Add(self.openButton, 0, flag=wx.ALIGN_LEFT | wx.ALIGN_CENTER)
-        self.fileToolsBox.Add(self.exportButton, 0, flag=wx.ALIGN_LEFT | wx.ALIGN_CENTER)        
-        self.toolNumBox.Add(self.fileToolsBox, 0, flag=wx.ALIGN_LEFT | wx.ALIGN_CENTER)
-        
-        #add subunit radio buttons to hbox
-        self.subunitBox = wx.StaticBoxSizer(wx.StaticBox(self.panel,wx.ID_ANY,'displaySubunits'), wx.HORIZONTAL)
-        self.subunitBox.Add(self.r70S, 0, flag=wx.ALIGN_LEFT | wx.ALIGN_CENTER)
-        self.subunitBox.Add(self.r50S, 0, flag=wx.ALIGN_LEFT | wx.ALIGN_CENTER)
-        self.subunitBox.Add(self.r30S, 0, flag=wx.ALIGN_LEFT | wx.ALIGN_CENTER)
-        self.toolNumBox.Add(self.subunitBox, 0, flag=wx.ALIGN_LEFT | wx.GROW)
-        self.toolNumBox.Add(wx.BoxSizer(wx.HORIZONTAL), 1, flag=wx.GROW) #push all remaining to the right
+        self.fileToolsBox = wx.StaticBoxSizer(wx.StaticBox(self.panel,wx.ID_ANY,'file tools'), wx.VERTICAL)
+        self.fileToolsBox.Add(self.openButton, 0, flag=wx.ALIGN_LEFT)
+        self.fileToolsBox.Add(self.exportButton, 0, flag=wx.ALIGN_LEFT)        
+        self.toolNumBox.Add(self.fileToolsBox, 0, flag=wx.ALIGN_LEFT | wx.GROW)
         
         #add loadP/SaveP buttons
-        self.paramBox = wx.StaticBoxSizer(wx.StaticBox(self.panel,wx.ID_ANY,'filterParamters'), wx.HORIZONTAL)
-        self.paramBox.Add(self.savePButton, 0, flag=wx.ALIGN_LEFT | wx.ALIGN_CENTER)
-        self.paramBox.Add(self.loadPButton, 0, flag=wx.ALIGN_LEFT | wx.ALIGN_CENTER)
+        self.paramBox = wx.StaticBoxSizer(wx.StaticBox(self.panel,wx.ID_ANY,'filterParams'), wx.VERTICAL)
+        self.paramBox.Add(self.loadPButton, 0, flag=wx.ALIGN_LEFT)
+        self.paramBox.Add(self.savePButton, 0, flag=wx.ALIGN_LEFT)
         self.toolNumBox.Add(self.paramBox, 0, flag=wx.ALIGN_RIGHT | wx.GROW)
         
         #add calculate button
         self.toolNumBox.Add(self.calcButton, 0, flag=wx.ALIGN_RIGHT | wx.GROW)
         
         #add numerator box to hbox
-        self.numBox = wx.StaticBoxSizer(wx.StaticBox(self.panel,wx.ID_ANY,'numerator'), wx.HORIZONTAL)
+        self.numBox = wx.StaticBoxSizer(wx.StaticBox(self.panel,wx.ID_ANY,'num'), wx.VERTICAL)
         self.numBox.Add(self.lowCheckNum, 0, flag=wx.ALIGN_RIGHT | wx.ALIGN_CENTER)
         if self.pulse:
             self.numBox.Add(self.midCheckNum, 0, flag=wx.ALIGN_RIGHT | wx.ALIGN_CENTER)
         self.numBox.Add(self.highCheckNum, 0,flag=wx.ALIGN_RIGHT | wx.ALIGN_CENTER)
         self.toolNumBox.Add(self.numBox, 0, flag=wx.ALIGN_RIGHT | wx.GROW)
         #add denominator box to hbox
-        self.denBox = wx.StaticBoxSizer(wx.StaticBox(self.panel,wx.ID_ANY,'denominator'), wx.HORIZONTAL)
+        self.denBox = wx.StaticBoxSizer(wx.StaticBox(self.panel,wx.ID_ANY,'den'), wx.VERTICAL)
         self.denBox.Add(self.lowCheckDen, 0, flag=wx.ALIGN_RIGHT | wx.ALIGN_CENTER)
         if self.pulse:
             self.denBox.Add(self.midCheckDen, 0, flag=wx.ALIGN_RIGHT | wx.ALIGN_CENTER)
         self.denBox.Add(self.highCheckDen, 0,flag=wx.ALIGN_RIGHT | wx.ALIGN_CENTER)
         self.toolNumBox.Add(self.denBox, 0, flag=wx.ALIGN_RIGHT | wx.GROW)
+        
+        self.imageToolsBoxR = wx.StaticBoxSizer(wx.StaticBox(self.panel,wx.ID_ANY,'image tools'), wx.HORIZONTAL)
+        self.imageToolsBoxR.Add(self.toolbarRight, 0, flag=wx.ALIGN_RIGHT)
+        self.expandBox = wx.BoxSizer(wx.HORIZONTAL)
+        self.toolNumBox.Add(self.expandBox, 1, flag=wx.GROW)
+        self.toolNumBox.Add(self.imageToolsBoxR, 0, flag=wx.ALIGN_RIGHT | wx.GROW)
         
         #add hbox to vbox
         self.vbox.Add(self.toolNumBox, 0, flag = wx.GROW)
@@ -230,9 +246,9 @@ class MasseFrame(wx.Frame):
         self.controlFilters.Add(self.N15On, 0, flag=wx.ALIGN_RIGHT | wx.ALIGN_CENTER)
         self.controlFilters.Add(self.missedOn, 0, flag=wx.ALIGN_RIGHT | wx.ALIGN_CENTER)
         self.controlFilters.Add(self.rtOn, 0, flag=wx.ALIGN_RIGHT | wx.ALIGN_CENTER)
-        self.controlFilters.Add(self.residOn, 0, flag = wx.ALIGN_RIGHT | wx.ALIGN_CENTER)
         if self.varLab:
             self.controlFilters.Add(self.FRC_NXOn, 0, flag=wx.ALIGN_RIGHT | wx.ALIGN_CENTER)
+        self.controlFilters.Add(self.residOn, 0, flag = wx.ALIGN_RIGHT | wx.ALIGN_CENTER)
         self.vbox.Add(self.controlFilters, 0, flag = wx.ALIGN_LEFT | wx.TOP)
 
         self.panel.SetSizer(self.vbox)
@@ -244,11 +260,14 @@ class MasseFrame(wx.Frame):
         self.r70S.Bind(wx.EVT_RADIOBUTTON, self.onr70S_select)
         self.r50S.Bind(wx.EVT_RADIOBUTTON, self.onr50S_select)
         self.r30S.Bind(wx.EVT_RADIOBUTTON, self.onr30S_select)
+        self.rother.Bind(wx.EVT_RADIOBUTTON, self.onrother_select)
 
         self.exportButton.Bind(wx.EVT_BUTTON, self.on_export_button)
         self.openButton.Bind(wx.EVT_BUTTON, self.on_open_button)
         self.calcButton.Bind(wx.EVT_BUTTON, self.on_calc_button)
         self.cb_grid.Bind(wx.EVT_CHECKBOX, self.on_cb_grid)
+        self.hideCheck.Bind(wx.EVT_CHECKBOX, self.on_hideCheck)
+        self.zoomCheck.Bind(wx.EVT_CHECKBOX, self.on_zoomCheck)
         
         self.loadPButton.Bind(wx.EVT_BUTTON, self.on_loadP_button)
         self.savePButton.Bind(wx.EVT_BUTTON, self.on_saveP_button)
@@ -271,8 +290,8 @@ class MasseFrame(wx.Frame):
         if self.varLab:
             self.FRC_NXOn.Bind(wx.EVT_CHECKBOX, self.on_FRC_NXOn)
             
-        self.savedList.Bind(wx.EVT_LISTBOX, self.on_listBoxClick)
-        self.filteredList.Bind(wx.EVT_LISTBOX, self.on_listBoxClick)
+        self.savedList.Bind(wx.EVT_LISTBOX, self.on_savedBoxClick)
+        self.filteredList.Bind(wx.EVT_LISTBOX, self.on_filteredBoxClick)
 
     def on_loadP_button(self, event):
         f = open(self.datapath+'_last.filterParam', 'r')
@@ -291,6 +310,8 @@ class MasseFrame(wx.Frame):
         self.highCheckDen.SetValue(qMS.boolParse(pdict['highDen']))
         
         self.cb_grid.SetValue(qMS.boolParse(pdict['gridChecked']))
+        self.zoomCheck.SetValue(qMS.boolParse(pdict['zoomChecked']))
+        self.hideCheck.SetValue(qMS.boolParse(pdict['hideChecked']))
         
         self.ppmDiffRangeBypass.SetValue(pdict['ppmDiff_low'] + ' ' + pdict['ppmDiff_high'])
         self.N14RangeBypass.SetValue(pdict['ppm_n14_low'] + ' ' + pdict['ppm_n14_high'])
@@ -334,6 +355,8 @@ class MasseFrame(wx.Frame):
         outstr = outstr + '\nresid_low,' + resid_low + '\nresid_high,' + resid_high
         
         outstr = outstr + '\ngridChecked,' + str(self.cb_grid.IsChecked())
+        outstr = outstr + '\nzoomChecked,' + str(self.zoomCheck.IsChecked())
+        outstr = outstr + '\nhideChecked,' + str(self.hideCheck.IsChecked())
 
         outstr = outstr + '\nlowNum,' + str(self.lowCheckNum.IsChecked())
         if self.pulse:
@@ -370,13 +393,18 @@ class MasseFrame(wx.Frame):
         self.positionLabels = qMSDefs.positionLabels30S
         self.recalcAndDrawAll()
         
+    def onrother_select(self, event):
+        self.dataFrame['currentPos'] = self.dataFrame['otherpos']
+        self.positionLabels = sorted(set(self.dataFrame['protein'].values))
+        self.recalcAndDrawAll()
+
     def on_open_button(self, event):
         """
         Create and show the Open FileDialog
         """
-        wildcard =  "Preprocessed _iso_res.csv file (*_iso_res.csv)|*_iso_res.csv|"\
-                    "Massacre iso_csv file (*_iso.csv)|*_iso.csv|"\
-                    "All files (*.*)|*.*|"
+        wildcard =  "All files (*.*)|*.*|"\
+                    "Preprocessed _iso_res.csv file (*_iso_res.csv)|*_iso_res.csv|"\
+                    "Massacre iso_csv file (*_iso.csv)|*_iso.csv|"
         dlg = wx.FileDialog(
             self, message="Choose a file",
             defaultDir=self.currentDirectory, 
@@ -387,11 +415,11 @@ class MasseFrame(wx.Frame):
         
         if dlg.ShowModal() == wx.ID_OK:
             fullname = dlg.GetPaths()[0].split('/')
-            dp = '/'.join(fullname[:-1]) + '/'
-            self.currentDirectory = dp
-            fn = fullname[-1]
-            [df, ci, p, vl] = openFile(dp+fn)
-            startApp(df, dp, fn, ci, p, vl)
+            dpa = '/'.join(fullname[:-1]) + '/'
+            self.currentDirectory = dpa
+            fna = fullname[-1]
+            [dfr, pul, vlab] = openFile(dpa+fna)
+            startApp(dfr, dpa, fna, pul, vlab)
 
         dlg.Destroy()
     def on_export_button(self, event):
@@ -415,6 +443,12 @@ class MasseFrame(wx.Frame):
     def on_cb_grid(self, event):
         self.calc_figure()
         self.canvasLeft.draw()
+    def on_zoomCheck(self, event):
+        self.calc_figure()
+        self.canvasLeft.draw()
+    def on_hideCheck(self, event):
+        self.calc_figure()
+        self.canvasLeft.draw()
         
     def on_ppmDiff_range_button(self, event):
         self.currentHist = "ppmDiff"
@@ -432,7 +466,7 @@ class MasseFrame(wx.Frame):
         self.currentHist = "rtDiff"
         self.recalcAndDrawAll()
     def on_FRC_NX_range_button(self, event):
-        self.currentHist = "frac_NX"
+        self.currentHist = "FRC_NX"
         self.recalcAndDrawAll()
     def on_resid_range_button(self, event):
         self.currentHist = "resid"
@@ -457,14 +491,17 @@ class MasseFrame(wx.Frame):
 
     def on_exit(self, event):
         self.Destroy()
-    
-    def on_listBoxClick(self, event):
-        if not (self.filteredList.GetStringSelection() is u''):
-            self.currentISOFile = self.filteredList.GetStringSelection()
+
+    def on_savedBoxClick(self, event):
+        if not (self.savedList.GetStringSelection() is u''):
+            self.currentISOFile = self.savedList.GetStringSelection()
             self.currentRow = self.dataFrame[self.dataFrame['isofile'] == self.currentISOFile]
             self.newSelection()
-        elif not (self.savedList.GetStringSelection() is u''):
-            self.currentISOFile = self.savedList.GetStringSelection()
+        
+    
+    def on_filteredBoxClick(self, event):
+        if not (self.filteredList.GetStringSelection() is u''):
+            self.currentISOFile = self.filteredList.GetStringSelection()
             self.currentRow = self.dataFrame[self.dataFrame['isofile'] == self.currentISOFile]
             self.newSelection()
 
@@ -513,15 +550,17 @@ class MasseFrame(wx.Frame):
         self.selectedPoint, = self.PLPlot.plot(self.currentRow['currentPos'].values[0], self.currentRow['currentCalc'].values[0], 
                                               'o', ms=20, alpha=4, color='yellow', visible=True)
         self.PLPlot.grid(self.cb_grid.IsChecked())
-        self.PLPlot.plot(self.savedPoints['currentPos'], self.savedPoints['currentCalc'], 'ro', picker=5, label="Saved")
-        if self.cb_grid.IsChecked():
-            self.PLPlot.plot(self.filteredPoints['currentPos'], self.filteredPoints['currentCalc'], 'x', mec='grey', picker=5, label="filtered")
+        self.PLPlot.plot(self.savedPoints['currentPos'], self.savedPoints['currentCalc'], 'ro', picker=5, label="Saved : " + str(len(self.savedPoints['currentCalc'].values)))
+        if self.hideCheck.IsChecked():
+            self.PLPlot.plot(self.filteredPoints['currentPos'], self.filteredPoints['currentCalc'], 'x', mec='grey', picker=5, label="Filtered : " + str(len(self.filteredPoints['currentCalc'].values)))
         else:
-            self.PLPlot.plot(self.filteredPoints['currentPos'], self.filteredPoints['currentCalc'], 'bo', picker=5, label="filtered")
+            self.PLPlot.plot(self.filteredPoints['currentPos'], self.filteredPoints['currentCalc'], 'bo', picker=5, label="Filtered : "  + str(len(self.filteredPoints['currentCalc'].values)))
         self.PLPlot.set_xticks(range(1,int(self.dataFrame['currentPos'].max())+1))
         self.PLPlot.set_xticklabels(self.positionLabels, rotation=90, size='small')
         self.PLPlot.set_title(self.datafile + " : " + setCurrentFrac(self.calcNum, self.calcDen))
         self.PLPlot.set_xlim([0,self.dataFrame['currentPos'].max()+1])
+        if not self.zoomCheck.IsChecked():
+            self.PLPlot.set_ylim([0,max(self.dataFrame['currentCalc'].max(),1)])
         self.PLPlot.legend()
     
     def calc_fit(self):
@@ -546,6 +585,8 @@ class MasseFrame(wx.Frame):
                         "\nrtDiff: " + str(round(row['rtDiff'].values[0],3)) + " : " + str(passing['rtDiff']) +\
                         "\nresid: " + str(round(row['resid'].values[0],1)) + " : " + str(passing['resid']) +\
                         "\nmissed: " + str(row['missed'].values[0]) + " : " + str(passing['missed'])
+        if self.varLab:
+            dataString = dataString + "\nFRC_NX: " + str(round(row['FRC_NX'].values[0],3)) + " : " + str(passing['FRC_NX'])
         self.PNGPlot.text(0.98, 0.8,dataString,
                           horizontalalignment='right',
                           verticalalignment='top',
@@ -618,11 +659,12 @@ class MasseFrame(wx.Frame):
         passing['rtDiff'] = (row['rtDiff'].values[0] >= self.rtDiff_low) and (row['rtDiff'].values[0] <= self.rtDiff_high)
         passing['resid'] = (row['resid'].values[0] >= self.resid_low) and (row['resid'].values[0] <= self.resid_high) 
         if self.varLab:
-            passing['varLab'] = (row['FRC_NX'].values[0] >= self.FRC_NX_low) and (row['FRC_NX'].values[0] <= self.FRC_NX_high)
+            passing['FRC_NX'] = (row['FRC_NX'].values[0] >= self.FRC_NX_low) and (row['FRC_NX'].values[0] <= self.FRC_NX_high)
         return passing
 
     def getPass(self, t):
         self.findRanges()
+        filt = self.dataFrame['missed'] >= -1
         if self.ppmDiffOn.IsChecked():
             filt =  (self.dataFrame['ppmDiff'] >= self.ppmDiff_low) & (self.dataFrame['ppmDiff'] <= self.ppmDiff_high) 
         if self.N14On.IsChecked():
@@ -689,9 +731,10 @@ def fileOpenStart():
         """
         Create and show the Open FileDialog
         """
-        wildcard =  "Preprocessed _iso_res.csv file (*_iso_res.csv)|*_iso_res.csv|"\
-                    "Massacre iso_csv file (*_iso.csv)|*_iso.csv|"\
-                    "All files (*.*)|*.*|"
+        wildcard =  "All files (*.*)|*.*|"\
+                    "Preprocessed _iso_res.csv file (*_iso_res.csv)|*_iso_res.csv|"\
+                    "Massacre iso_csv file (*_iso.csv)|*_iso.csv|"
+                    
         app = wx.App(False)  # Create a new app, don't redirect stdout/stderr to a window.
         frame = wx.Frame(None, wx.ID_ANY, "") # A Frame is a top-level window.
         dlg = wx.FileDialog(frame,
@@ -713,9 +756,9 @@ def fileOpenStart():
         dlg.Destroy()
 
 if __name__ == '__main__':
-    #dpa = '/home/jhdavis/data/2013_03_11-NCMGradients/SingleSpike/isos/'
-    #fna = "S21_iso_res.csv"
+    #dpa = '/home/jhdavis/data/2013_05_28-MSUPulse/1to12/'
+    #fna = "muspulse1_iso_res.csv"
     
-    #[dfr, cif, pul, vlab] = openFile(dpa+fna)
+    #[dfr, pul, vlab] = openFile(dpa+fna)
     [dfr, dpa, fna, pul, vlab] = fileOpenStart()
     startApp(dfr, dpa, fna, pul, vlab)
