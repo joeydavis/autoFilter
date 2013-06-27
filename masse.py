@@ -189,6 +189,7 @@ class MasseFrame(wx.Frame):
         #add loadP/SaveP buttons
         self.paramBox = wx.StaticBoxSizer(wx.StaticBox(self.panel,wx.ID_ANY,'filterParams'), wx.VERTICAL)
         self.paramBox.Add(self.loadPButton, 0, flag=wx.ALIGN_LEFT)
+        self.saveBox = wx.BoxSizer(wx.HORIZONTAL)
         self.paramBox.Add(self.savePButton, 0, flag=wx.ALIGN_LEFT)
         self.toolNumBox.Add(self.paramBox, 0, flag=wx.ALIGN_RIGHT | wx.GROW)
         
@@ -331,8 +332,10 @@ class MasseFrame(wx.Frame):
         self.residOn.SetValue(qMS.boolParse(pdict['resid']))
         f.close()
         self.recalcAndDrawAll()
-        
+
     def on_saveP_button(self, event):
+        self.savePs(self.datapath+'_last.filterParam')
+    def savePs(self, p):
         (ppmDiff_low, ppmDiff_high) = map(str, self.ppmDiffRangeBypass.GetValue().split(' '))
         (ppm_n14_low, ppm_n14_high) = map(str, self.N14RangeBypass.GetValue().split(' '))
         (ppm_n15_low, ppm_n15_high) = map(str, self.N15RangeBypass.GetValue().split(' '))
@@ -374,7 +377,7 @@ class MasseFrame(wx.Frame):
         outstr = outstr + '\nrtDiff,' + str(self.rtOn.IsChecked())
         outstr = outstr + '\nresid,' + str(self.residOn.IsChecked())
 
-        f = open(self.datapath+'_last.filterParam', 'w')
+        f = open(p, 'w')
         f.write(outstr)
         f.close()
         
@@ -438,6 +441,8 @@ class MasseFrame(wx.Frame):
             path = dlg.GetPath()
             self.calcPoints()
             self.savedPoints.to_csv(path, index=False)
+            print path
+            self.savePs(path[:-4]+'.filterParam')
         dlg.Destroy()
         
     def on_cb_grid(self, event):
