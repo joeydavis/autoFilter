@@ -534,7 +534,7 @@ class MasseFrame(wx.Frame):
         self.UID_output_list = []  
         self.calcNum = self.getChecksNum()
         self.calcDen = self.getChecksDen()
-        self.dataFrame['currentCalc'] = qMS.calcValueDF(self.dataFrame, self.calcNum, self.calcDen)
+        self.dataFrame['currentCalc'] = qMS.calcValue(self.dataFrame, self.calcNum, self.calcDen)
         
     def calcPoints(self):
         self.savedPoints = self.getPass(True)
