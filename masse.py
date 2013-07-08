@@ -61,13 +61,14 @@ class MasseFrame(wx.Frame):
         self.datafile = fn
         self.pulse=pulse
         self.varLab=varLab
+        self.figdim = 7.5
         
         self.panel = wx.Panel(self)
         
         '''Create the figure panels'''
-        self.figLeft = Figure((7.5, 7.5))
+        self.figLeft = Figure((self.figdim, self.figdim))
         self.canvasLeft = FigCanvas(self.panel, wx.ID_ANY, self.figLeft)
-        self.figRight = Figure((7.5, 7.5))
+        self.figRight = Figure((self.figdim, self.figdim))
         self.canvasRight = FigCanvas(self.panel, wx.ID_ANY, self.figRight)
         
         gsLeft = gridspec.GridSpec(5,1)
