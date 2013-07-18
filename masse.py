@@ -30,6 +30,7 @@ class MasseFrame(wx.Frame):
         self.missedRangeBypass.SetValue('0 5')        
         self.rtDiffRangeBypass.SetValue('-0.5 0.5')
         self.residRangeBypass.SetValue('0 5000')
+        self.minIntensityBypass.SetValue('100')
 
         self.ppmDiffOn.SetValue(True)
         self.N14On.SetValue(True)
@@ -37,6 +38,7 @@ class MasseFrame(wx.Frame):
         self.missedOn.SetValue(True)
         self.rtOn.SetValue(True)
         self.residOn.SetValue(True)
+        self.minIntensityOn.SetValue(True)
         
         if self.varLab:
             self.FRC_NXRangeBypass.SetValue('0 1')
@@ -114,23 +116,25 @@ class MasseFrame(wx.Frame):
             self.midCheckDen = wx.CheckBox(self.panel, wx.ID_ANY, label="mid")
         self.highCheckDen = wx.CheckBox(self.panel, wx.ID_ANY, label="high")
 
-        self.ppmDiff_range_button = wx.Button(self.panel, wx.ID_ANY, "PPM difference cutoff")        
-        self.N14_range_button = wx.Button(self.panel, wx.ID_ANY, "14N PPM cutoff")        
-        self.N15_range_button = wx.Button(self.panel, wx.ID_ANY, "15N PPM cutoff")
-        self.missed_range_button = wx.Button(self.panel, wx.ID_ANY, "Missed cleavage cutoff")
-        self.rtDiff_range_button = wx.Button(self.panel, wx.ID_ANY, "RT diff cutoff")
-        self.resid_range_button = wx.Button(self.panel, wx.ID_ANY, "residual cutoff")
+        self.ppmDiff_range_button = wx.Button(self.panel, wx.ID_ANY, "PPM diff")
+        self.N14_range_button = wx.Button(self.panel, wx.ID_ANY, "14N PPM")   
+        self.N15_range_button = wx.Button(self.panel, wx.ID_ANY, "15N PPM")
+        self.missed_range_button = wx.Button(self.panel, wx.ID_ANY, "Missed cleavage")
+        self.rtDiff_range_button = wx.Button(self.panel, wx.ID_ANY, "RT diff")
+        self.minIntensity_range_button = wx.Button(self.panel, wx.ID_ANY, "min intensity")
+        self.resid_range_button = wx.Button(self.panel, wx.ID_ANY, "residual")
         if self.varLab:
             self.FRC_NX_range_button = wx.Button(self.panel, wx.ID_ANY, "FRC_NX")
         
-        self.ppmDiffRangeBypass = wx.TextCtrl(self.panel, size=(100,-1),style=wx.TE_PROCESS_ENTER)
-        self.N14RangeBypass = wx.TextCtrl(self.panel, size=(100,-1),style=wx.TE_PROCESS_ENTER)
-        self.N15RangeBypass = wx.TextCtrl(self.panel, size=(100,-1),style=wx.TE_PROCESS_ENTER)
-        self.missedRangeBypass = wx.TextCtrl(self.panel, size=(100,-1),style=wx.TE_PROCESS_ENTER)
-        self.rtDiffRangeBypass = wx.TextCtrl(self.panel, size=(100,-1),style=wx.TE_PROCESS_ENTER)
-        self.residRangeBypass = wx.TextCtrl(self.panel, size=(100,-1),style=wx.TE_PROCESS_ENTER)
+        self.ppmDiffRangeBypass = wx.TextCtrl(self.panel, size=(75,-1),style=wx.TE_PROCESS_ENTER)
+        self.N14RangeBypass = wx.TextCtrl(self.panel, size=(75,-1),style=wx.TE_PROCESS_ENTER)
+        self.N15RangeBypass = wx.TextCtrl(self.panel, size=(75,-1),style=wx.TE_PROCESS_ENTER)
+        self.missedRangeBypass = wx.TextCtrl(self.panel, size=(75,-1),style=wx.TE_PROCESS_ENTER)
+        self.rtDiffRangeBypass = wx.TextCtrl(self.panel, size=(75,-1),style=wx.TE_PROCESS_ENTER)
+        self.residRangeBypass = wx.TextCtrl(self.panel, size=(75,-1),style=wx.TE_PROCESS_ENTER)
+        self.minIntensityBypass = wx.TextCtrl(self.panel, size=(75,-1),style=wx.TE_PROCESS_ENTER)
         if self.varLab:
-            self.FRC_NXRangeBypass = wx.TextCtrl(self.panel, size=(100,-1),style=wx.TE_PROCESS_ENTER)
+            self.FRC_NXRangeBypass = wx.TextCtrl(self.panel, size=(75,-1),style=wx.TE_PROCESS_ENTER)
 
         self.ppmDiffOn = wx.CheckBox(self.panel, wx.ID_ANY, label="ppmDiff")
         self.N14On = wx.CheckBox(self.panel, wx.ID_ANY, label="N14")
@@ -138,6 +142,7 @@ class MasseFrame(wx.Frame):
         self.missedOn = wx.CheckBox(self.panel, wx.ID_ANY, label="missed")
         self.rtOn = wx.CheckBox(self.panel, wx.ID_ANY, label="RTDiff")
         self.residOn = wx.CheckBox(self.panel, wx.ID_ANY, label="residuals")
+        self.minIntensityOn = wx.CheckBox(self.panel, wx.ID_ANY, label="min intensity")
         if self.varLab:
             self.FRC_NXOn = wx.CheckBox(self.panel, wx.ID_ANY, label="FRC_NX")
         
@@ -222,7 +227,7 @@ class MasseFrame(wx.Frame):
         self.vbox.Add(self.toolNumBox, 0, flag = wx.GROW)
         
         # Sliders for setting the various cutoffs
-        self.filterBox = wx.StaticBoxSizer(wx.StaticBox(self.panel,wx.ID_ANY,'filter settings'), wx.HORIZONTAL)
+        self.filterBox = wx.StaticBoxSizer(wx.StaticBox(self.panel,wx.ID_ANY,'filter cuttoff settings'), wx.HORIZONTAL)
         flags = wx.ALIGN_LEFT | wx.ALIGN_CENTER
         self.filterBox.Add(self.ppmDiff_range_button, 0, flag=flags)
         self.filterBox.Add(self.ppmDiffRangeBypass, 0, flag=flags)
@@ -239,6 +244,8 @@ class MasseFrame(wx.Frame):
             self.filterBox.Add(self.FRC_NXRangeBypass, 0, flag = flags)
         self.filterBox.Add(self.resid_range_button, 0, flag=flags)
         self.filterBox.Add(self.residRangeBypass, 0, flag = flags)
+        self.filterBox.Add(self.minIntensity_range_button, 0, flag=flags)
+        self.filterBox.Add(self.minIntensityBypass, 0, flag = flags)
         self.vbox.Add(self.filterBox, 0, flag = wx.ALIGN_LEFT | wx.TOP)
         
         # Filters on/off checks
@@ -251,6 +258,7 @@ class MasseFrame(wx.Frame):
         if self.varLab:
             self.controlFilters.Add(self.FRC_NXOn, 0, flag=wx.ALIGN_RIGHT | wx.ALIGN_CENTER)
         self.controlFilters.Add(self.residOn, 0, flag = wx.ALIGN_RIGHT | wx.ALIGN_CENTER)
+        self.controlFilters.Add(self.minIntensityOn, 0, flag = wx.ALIGN_RIGHT | wx.ALIGN_CENTER)
         self.vbox.Add(self.controlFilters, 0, flag = wx.ALIGN_LEFT | wx.TOP)
 
         self.panel.SetSizer(self.vbox)
@@ -280,6 +288,7 @@ class MasseFrame(wx.Frame):
         self.missed_range_button.Bind(wx.EVT_BUTTON, self.on_missed_range_button)
         self.rtDiff_range_button.Bind(wx.EVT_BUTTON, self.on_rtDiff_range_button)
         self.resid_range_button.Bind(wx.EVT_BUTTON, self.on_resid_range_button)
+        self.minIntensity_range_button.Bind(wx.EVT_BUTTON, self.on_minIntensity_range_button)
         if self.varLab:
             self.FRC_NX_range_button.Bind(wx.EVT_BUTTON, self.on_FRC_NX_range_button)
         
@@ -289,6 +298,7 @@ class MasseFrame(wx.Frame):
         self.missedOn.Bind(wx.EVT_CHECKBOX, self.on_missedOn)
         self.rtOn.Bind(wx.EVT_CHECKBOX, self.on_rtOn)
         self.residOn.Bind(wx.EVT_CHECKBOX, self.on_residOn)
+        self.minIntensityOn.Bind(wx.EVT_CHECKBOX, self.on_minIntensityOn)
         if self.varLab:
             self.FRC_NXOn.Bind(wx.EVT_CHECKBOX, self.on_FRC_NXOn)
             
@@ -477,6 +487,9 @@ class MasseFrame(wx.Frame):
     def on_resid_range_button(self, event):
         self.currentHist = "resid"
         self.recalcAndDrawAll()
+    def on_minIntensity_range_button(self, event):
+        self.currentHist = "minIntensity"
+        self.recalcAndDrawAll()
     def on_calc_button(self, event):
         self.recalcAndDrawAll()
 
@@ -493,6 +506,8 @@ class MasseFrame(wx.Frame):
     def on_residOn(self, event):
         self.recalcAndDrawAll()
     def on_FRC_NXOn(self, event):
+        self.recalcAndDrawAll()
+    def on_minIntensityOn(self, event):
         self.recalcAndDrawAll()
 
     def on_exit(self, event):
@@ -588,9 +603,11 @@ class MasseFrame(wx.Frame):
         dataString =    "ppmDiff: " + str(round(row['ppmDiff'].values[0],1)) + " : " + str(passing['ppmDiff']) +\
                         "\nN14: " + str(round(row['ppm_n14'].values[0],1)) + " : " + str(passing['N14']) +\
                         "\nN15: " + str(round(row['ppm_n15'].values[0],1)) + " : " + str(passing['N15']) +\
+                        "\nmissed: " + str(row['missed'].values[0]) + " : " + str(passing['missed']) +\
                         "\nrtDiff: " + str(round(row['rtDiff'].values[0],3)) + " : " + str(passing['rtDiff']) +\
                         "\nresid: " + str(round(row['resid'].values[0],1)) + " : " + str(passing['resid']) +\
-                        "\nmissed: " + str(row['missed'].values[0]) + " : " + str(passing['missed'])
+                        "\nintensity: " + str(round(row['minIntensity'].values[0],1)) + " : " + str(passing['minIntensity'])
+                        
         if self.varLab:
             dataString = dataString + "\nFRC_NX: " + str(round(row['FRC_NX'].values[0],3)) + " : " + str(passing['FRC_NX'])
         self.PNGPlot.text(0.98, 0.8,dataString,
@@ -651,6 +668,7 @@ class MasseFrame(wx.Frame):
         (self.missed_low, self.missed_high) = map(float, self.missedRangeBypass.GetValue().split(' '))
         (self.rtDiff_low, self.rtDiff_high) = map(float, self.rtDiffRangeBypass.GetValue().split(' '))
         (self.resid_low, self.resid_high) = map(float, self.residRangeBypass.GetValue().split(' '))
+        self.minIntensity = float(self.minIntensityBypass.GetValue())
         if self.varLab:
             (self.FRC_NX_low, self.FRC_NX_high) = map(float, self.FRC_NXRangeBypass.GetValue().split(' '))
 
@@ -664,6 +682,7 @@ class MasseFrame(wx.Frame):
         passing['missed'] = (row['missed'].values[0] >= self.missed_low) and (row['missed'].values[0] <= self.missed_high)
         passing['rtDiff'] = (row['rtDiff'].values[0] >= self.rtDiff_low) and (row['rtDiff'].values[0] <= self.rtDiff_high)
         passing['resid'] = (row['resid'].values[0] >= self.resid_low) and (row['resid'].values[0] <= self.resid_high) 
+        passing['minIntensity'] = (row['minIntensity'].values[0] >= self.minIntensity)
         if self.varLab:
             passing['FRC_NX'] = (row['FRC_NX'].values[0] >= self.FRC_NX_low) and (row['FRC_NX'].values[0] <= self.FRC_NX_high)
         return passing
@@ -683,6 +702,8 @@ class MasseFrame(wx.Frame):
             filt = filt & (self.dataFrame['rtDiff'] >= self.rtDiff_low) & (self.dataFrame['rtDiff'] <= self.rtDiff_high)
         if self.residOn.IsChecked():
             filt = filt & (self.dataFrame['resid'] >= self.resid_low) & (self.dataFrame['resid'] <= self.resid_high)
+        if self.minIntensityOn.IsChecked():
+            filt = filt & (self.dataFrame['minIntensity'] >= self.minIntensity)
         if self.varLab:
             if self.FRC_NXOn.IsChecked():
                 filt = filt & (self.dataFrame['FRC_NX'] >= self.FRC_NX_low) & (self.dataFrame['FRC_NX'] <= self.FRC_NX_high)
@@ -720,7 +741,7 @@ def transformValue(inputData, transformData, toTransform, normalizeTo):
 
 def openFile(fullpath):
     dataFrame = qMS.readIsoCSV(fullpath)
-    if not ('resid' in dataFrame.columns):
+    if not ('resid' in dataFrame.columns and 'minIntensity' in dataFrame.columns):
         dataFrame = qMS.preProcessIsoCSV(fullpath, True)
     
     puls = 'AMP_L' in dataFrame.columns
