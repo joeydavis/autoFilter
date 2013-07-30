@@ -645,7 +645,7 @@ class MasseFrame(wx.Frame):
         toReturn = []        
         if self.lowCheckNum.IsChecked():
             toReturn.append('AMP_U')
-        if self and self.midCheckNum.IsChecked():
+        if self.pulse and self.midCheckNum.IsChecked():
             toReturn.append('AMP_L')
         if self.highCheckNum.IsChecked():
             toReturn.append('AMP_S')
