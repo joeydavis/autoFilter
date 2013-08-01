@@ -32,17 +32,17 @@ class MasseFrame(wx.Frame):
         self.residRangeBypass.SetValue('0 5000')
         self.minIntensityBypass.SetValue('100')
 
-        self.ppmDiffOn.SetValue(True)
-        self.N14On.SetValue(True)
-        self.N15On.SetValue(True)
-        self.missedOn.SetValue(True)
-        self.rtOn.SetValue(True)
-        self.residOn.SetValue(True)
-        self.minIntensityOn.SetValue(True)
+        self.ppmDiffOn.SetValue(False)
+        self.N14On.SetValue(False)
+        self.N15On.SetValue(False)
+        self.missedOn.SetValue(False)
+        self.rtOn.SetValue(False)
+        self.residOn.SetValue(False)
+        self.minIntensityOn.SetValue(False)
         
         if self.varLab:
             self.FRC_NXRangeBypass.SetValue('0 1')
-            self.FRC_NXOn.SetValue(True)
+            self.FRC_NXOn.SetValue(False)
         self.recalcAndDrawAll(setZero=True)
 
     def create_main_panel(self, df, dp, fn, pulse=False, varLab=False):
@@ -56,7 +56,7 @@ class MasseFrame(wx.Frame):
         self.currentHist = "ppmDiff"
         self.savedPoints=None
         self.filteredPoints=None
-        self.positionLabels = qMSDefs.positionLabels70S
+        #self.positionLabels = qMSDefs.positionLabels70S
         self.currentDirectory = os.getcwd()
         self.dataFrame = df
         self.datapath = dp
@@ -64,6 +64,7 @@ class MasseFrame(wx.Frame):
         self.pulse=pulse
         self.varLab=varLab
         self.figdim = 7.5
+        self.positionLabels = sorted(set(self.dataFrame['protein'].values))
         
         self.panel = wx.Panel(self)
         
@@ -96,10 +97,10 @@ class MasseFrame(wx.Frame):
         self.exportButton = wx.Button(self.panel, wx.ID_ANY, "Export")
         self.openButton = wx.Button(self.panel, wx.ID_ANY, "Open")
         
-        self.r70S = wx.RadioButton(self.panel, label="70S", style=wx.RB_GROUP)
+        self.rother = wx.RadioButton(self.panel, label="other", style=wx.RB_GROUP)
+        self.r70S = wx.RadioButton(self.panel, label="70S")
         self.r50S = wx.RadioButton(self.panel, label="50S")
         self.r30S = wx.RadioButton(self.panel, label="30S")
-        self.rother = wx.RadioButton(self.panel, label="other")
         
         self.savePButton = wx.Button(self.panel, wx.ID_ANY, "Save")
         self.loadPButton = wx.Button(self.panel, wx.ID_ANY, "Load")
