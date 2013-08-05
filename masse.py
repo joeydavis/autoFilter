@@ -39,6 +39,8 @@ class MasseFrame(wx.Frame):
         self.rtOn.SetValue(False)
         self.residOn.SetValue(False)
         self.minIntensityOn.SetValue(False)
+        self.handSaveOn.SetValue(False)
+        self.handDeleteOn.SetValue(False)
         
         if self.varLab:
             self.FRC_NXRangeBypass.SetValue('0 1')
@@ -146,6 +148,8 @@ class MasseFrame(wx.Frame):
         self.minIntensityOn = wx.CheckBox(self.panel, wx.ID_ANY, label="min intensity")
         if self.varLab:
             self.FRC_NXOn = wx.CheckBox(self.panel, wx.ID_ANY, label="FRC_NX")
+        self.handSaveOn = wx.CheckBox(self.panel, wx.ID_ANY, label="curated_save")
+        self.handDeleteOn = wx.CheckBox(self.panel, wx.ID_ANY, label="curated_remove")
         
         '''lay out the buttons'''
         self.vbox = wx.BoxSizer(wx.VERTICAL)
@@ -260,6 +264,8 @@ class MasseFrame(wx.Frame):
             self.controlFilters.Add(self.FRC_NXOn, 0, flag=wx.ALIGN_RIGHT | wx.ALIGN_CENTER)
         self.controlFilters.Add(self.residOn, 0, flag = wx.ALIGN_RIGHT | wx.ALIGN_CENTER)
         self.controlFilters.Add(self.minIntensityOn, 0, flag = wx.ALIGN_RIGHT | wx.ALIGN_CENTER)
+        self.controlFilters.Add(self.handSaveOn, 0, flag = wx.ALIGN_RIGHT | wx.ALIGN_CENTER)
+        self.controlFilters.Add(self.handDeleteOn, 0, flag = wx.ALIGN_RIGHT | wx.ALIGN_CENTER)
         self.vbox.Add(self.controlFilters, 0, flag = wx.ALIGN_LEFT | wx.TOP)
 
         self.panel.SetSizer(self.vbox)
@@ -300,11 +306,15 @@ class MasseFrame(wx.Frame):
         self.rtOn.Bind(wx.EVT_CHECKBOX, self.on_rtOn)
         self.residOn.Bind(wx.EVT_CHECKBOX, self.on_residOn)
         self.minIntensityOn.Bind(wx.EVT_CHECKBOX, self.on_minIntensityOn)
+        self.handSaveOn.Bind(wx.EVT_CHECKBOX, self.on_handSaveOn)
+        self.handDeleteOn.Bind(wx.EVT_CHECKBOX, self.on_handDeleteOn)
         if self.varLab:
             self.FRC_NXOn.Bind(wx.EVT_CHECKBOX, self.on_FRC_NXOn)
             
         self.savedList.Bind(wx.EVT_LISTBOX, self.on_savedBoxClick)
         self.filteredList.Bind(wx.EVT_LISTBOX, self.on_filteredBoxClick)
+        
+        self.panel.Bind(wx.EVT_KEY_UP, self.on_key_press)
 
     def on_loadP_button(self, event):
         f = open(self.datapath+'_last.filterParam', 'r')
@@ -335,6 +345,7 @@ class MasseFrame(wx.Frame):
             self.FRC_NXRangeBypass.SetValue(pdict['FRC_NX_low'] + ' ' + pdict['FRC_NX_high'])
             self.FRC_NXOn.SetValue(qMS.boolParse(pdict['FRC_NX']))
         self.residRangeBypass.SetValue(pdict['resid_low'] + ' ' + pdict['resid_high'])
+        self.minIntensityBypass.SetValue(pdict['minIntensity'])
 
         self.ppmDiffOn.SetValue(qMS.boolParse(pdict['ppmDiff']))
         self.N14On.SetValue(qMS.boolParse(pdict['n14']))
@@ -342,6 +353,9 @@ class MasseFrame(wx.Frame):
         self.missedOn.SetValue(qMS.boolParse(pdict['missed']))
         self.rtOn.SetValue(qMS.boolParse(pdict['rtDiff']))
         self.residOn.SetValue(qMS.boolParse(pdict['resid']))
+        self.minIntensityOn.SetValue(qMS.boolParse(pdict['minIntensityOn']))
+        self.handSaveOn.SetValue(qMS.boolParse(pdict['handSaveOn']))
+        self.handDeleteOn.SetValue(qMS.boolParse(pdict['handDeleteOn']))
         f.close()
         self.recalcAndDrawAll()
 
@@ -356,6 +370,7 @@ class MasseFrame(wx.Frame):
         if self.varLab:
             (FRC_NX_low, FRC_NX_high) = map(str, self.FRC_NXRangeBypass.GetValue().split(' '))
         (resid_low, resid_high) = map(str, self.residRangeBypass.GetValue().split(' '))
+        minI = float(self.minIntensityBypass.GetValue())
 
         outstr = 'param,' + 'value'
         
@@ -368,6 +383,7 @@ class MasseFrame(wx.Frame):
             outstr = outstr + '\nFRC_NX_low,' + FRC_NX_low + '\nFRC_NX_high,' + FRC_NX_high
             outstr = outstr + '\nFRC_NX,' + str(self.FRC_NXOn.IsChecked())
         outstr = outstr + '\nresid_low,' + resid_low + '\nresid_high,' + resid_high
+        outstr = outstr + '\nminIntensity,' + str(minI)
         
         outstr = outstr + '\ngridChecked,' + str(self.cb_grid.IsChecked())
         outstr = outstr + '\nzoomChecked,' + str(self.zoomCheck.IsChecked())
@@ -388,6 +404,9 @@ class MasseFrame(wx.Frame):
         outstr = outstr + '\nmissed,' + str(self.missedOn.IsChecked())
         outstr = outstr + '\nrtDiff,' + str(self.rtOn.IsChecked())
         outstr = outstr + '\nresid,' + str(self.residOn.IsChecked())
+        outstr = outstr + '\nminIntensityOn,' + str(self.minIntensityOn.IsChecked())
+        outstr = outstr + '\nhandSaveOn,' + str(self.handSaveOn.IsChecked())
+        outstr = outstr + '\nhandDeleteOn,' + str(self.handDeleteOn.IsChecked())
 
         f = open(p, 'w')
         f.write(outstr)
@@ -510,6 +529,10 @@ class MasseFrame(wx.Frame):
         self.recalcAndDrawAll()
     def on_minIntensityOn(self, event):
         self.recalcAndDrawAll()
+    def on_handSaveOn(self, event):
+        self.recalcAndDrawAll()
+    def on_handDeleteOn(self, event):
+        self.recalcAndDrawAll()
 
     def on_exit(self, event):
         self.Destroy()
@@ -520,13 +543,30 @@ class MasseFrame(wx.Frame):
             self.currentRow = self.dataFrame[self.dataFrame['isofile'] == self.currentISOFile]
             self.newSelection()
         
-    
     def on_filteredBoxClick(self, event):
         if not (self.filteredList.GetStringSelection() is u''):
             self.currentISOFile = self.filteredList.GetStringSelection()
             self.currentRow = self.dataFrame[self.dataFrame['isofile'] == self.currentISOFile]
             self.newSelection()
 
+    def on_key_press(self, event):
+        event.Skip()
+        c = event.GetKeyCode()
+        if c is 68: #got a d keystroke
+            row = self.dataFrame[self.dataFrame['isofile'] == self.currentISOFile]
+            row['handDelete'] = True
+            row['handSave'] = False
+            self.dataFrame.update(row)
+            self.recalcAndDrawAll()
+            
+        elif c is 83: # got a s keystroke
+            row = self.dataFrame[self.dataFrame['isofile'] == self.currentISOFile]
+            row['handDelete'] = False
+            row['handSave'] = True
+            self.dataFrame.update(row)
+            self.recalcAndDrawAll()
+
+        
     def newSelection(self):
         self.calc_fit()
         self.canvasRight.draw()
@@ -601,6 +641,11 @@ class MasseFrame(wx.Frame):
         self.PNGPlot.legend()
         row = self.dataFrame[self.dataFrame['isofile'] == self.currentISOFile]
         passing = self.testPassRow(row)
+        stringColor = 'black'
+        if row['handDelete'].values[0] is True:
+            stringColor = 'red'
+        elif row['handSave'].values[0] is True:
+            stringColor = 'green'
         dataString =    "ppmDiff: " + str(round(row['ppmDiff'].values[0],1)) + " : " + str(passing['ppmDiff']) +\
                         "\nN14: " + str(round(row['ppm_n14'].values[0],1)) + " : " + str(passing['N14']) +\
                         "\nN15: " + str(round(row['ppm_n15'].values[0],1)) + " : " + str(passing['N15']) +\
@@ -614,13 +659,15 @@ class MasseFrame(wx.Frame):
         self.PNGPlot.text(0.98, 0.8,dataString,
                           horizontalalignment='right',
                           verticalalignment='top',
-                          transform = self.PNGPlot.transAxes)
+                          transform = self.PNGPlot.transAxes,
+                          color = stringColor)
         
         dataString = str(row['seqmod'].values[0]) + " : z=" + str(row['charge'].values[0])
         self.PNGPlot.text(0.02, 0.98,dataString,
                           horizontalalignment='left',
                           verticalalignment='top',
-                          transform = self.PNGPlot.transAxes)
+                          transform = self.PNGPlot.transAxes,
+                          color = stringColor)
         self.PNGPlot.set_title(self.currentISOFile)
 
     def calc_hist(self):
@@ -708,6 +755,10 @@ class MasseFrame(wx.Frame):
         if self.varLab:
             if self.FRC_NXOn.IsChecked():
                 filt = filt & (self.dataFrame['FRC_NX'] >= self.FRC_NX_low) & (self.dataFrame['FRC_NX'] <= self.FRC_NX_high)
+        if self.handSaveOn.IsChecked():
+            filt = filt | (self.dataFrame['handSave'] == True)
+        if self.handDeleteOn.IsChecked():
+            filt = filt & (self.dataFrame['handDelete'] == False)
         if t:
             return self.dataFrame[filt]
         else:
@@ -784,9 +835,10 @@ def fileOpenStart():
         dlg.Destroy()
 
 if __name__ == '__main__':
-    #dpa = '/home/jhdavis/data/2013_05_28-MSUPulse/1to12/'
-    #fna = "muspulse1_iso_res.csv"
+    dpa = '/home/jhdavis/data/2013_07_27-MSUABCD/'
+    fna = "msuD301_iso_res.csv"
+    [dfr, pul, vlab] = openFile(dpa+fna)
     
-    #[dfr, pul, vlab] = openFile(dpa+fna)
-    [dfr, dpa, fna, pul, vlab] = fileOpenStart()
+    #[dfr, dpa, fna, pul, vlab] = fileOpenStart()
+    
     startApp(dfr, dpa, fna, pul, vlab)
