@@ -835,10 +835,10 @@ def fileOpenStart():
         dlg.Destroy()
 
 if __name__ == '__main__':
-    dpa = '/home/jhdavis/data/2013_07_27-MSUABCD/'
-    fna = "msuD301_iso_res.csv"
-    [dfr, pul, vlab] = openFile(dpa+fna)
+    #dpa = '/home/jhdavis/data/2013_07_27-MSUABCD/'
+    #fna = "msuD301_iso_res.csv"
+    #[dfr, pul, vlab] = openFile(dpa+fna)
     
-    #[dfr, dpa, fna, pul, vlab] = fileOpenStart()
+    [dfr, dpa, fna, pul, vlab] = fileOpenStart()
     
     startApp(dfr, dpa, fna, pul, vlab)
