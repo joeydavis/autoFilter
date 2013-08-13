@@ -66,7 +66,7 @@ class MasseFrame(wx.Frame):
         self.pulse=pulse
         self.varLab=varLab
         self.figdim = 7.5
-        self.positionLabels = sorted(set(self.dataFrame['protein'].values))
+        self.positionLabels = qMS.sort_nicely(sorted(set(self.dataFrame['protein'].values)))
         
         self.panel = wx.Panel(self)
         
@@ -429,7 +429,7 @@ class MasseFrame(wx.Frame):
         
     def onrother_select(self, event):
         self.dataFrame['currentPos'] = self.dataFrame['otherpos']
-        self.positionLabels = sorted(set(self.dataFrame['protein'].values))
+        self.positionLabels = qMS.sort_nicely(sorted(set(self.dataFrame['protein'].values)))
         self.recalcAndDrawAll()
 
     def on_open_button(self, event):
