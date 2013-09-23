@@ -610,7 +610,7 @@ class MasseFrame(wx.Frame):
     def calc_figure(self):
         self.PLPlot.clear()
         self.selectedPoint, = self.PLPlot.plot(self.currentRow['currentPos'].values[0], self.currentRow['currentCalc'].values[0], 
-                                              'o', ms=20, alpha=4, color='yellow', visible=True)
+                                              'o', ms=20, alpha=0.5, color='yellow', visible=True)
         self.PLPlot.grid(self.cb_grid.IsChecked())
         self.PLPlot.plot(self.savedPoints['currentPos'], self.savedPoints['currentCalc'], 'ro', picker=5, label="Saved : " + str(len(self.savedPoints['currentCalc'].values)))
         if self.hideCheck.IsChecked():
