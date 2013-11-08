@@ -6,6 +6,7 @@ import string
 import csv
 import pandas as pd
 import numpy
+import sys
 import matplotlib.gridspec as gridspec
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_wxagg import \
@@ -835,29 +836,29 @@ def startApp(dataFrame, datapath, filename, pulse, varLab):
     app.frame.Show()
     app.MainLoop()    
 
-def fileOpenStart():
+def fileOpenStart(pathToFile=None):
         """
         Create and show the Open FileDialog
         """
         wildcard =  "All files (*.*)|*.*|"\
                     "Preprocessed _iso_res.csv file (*_iso_res.csv)|*_iso_res.csv|"\
                     "Massacre iso_csv file (*_iso.csv)|*_iso.csv|"
-                    
-        app = wx.App(False)  # Create a new app, don't redirect stdout/stderr to a window.
-        frame = wx.Frame(None, wx.ID_ANY, "") # A Frame is a top-level window.
-        dlg = wx.FileDialog(frame,
-            message="Choose a file",
-            defaultFile="",
-            wildcard=wildcard,
-            style=wx.OPEN | wx.CHANGE_DIR
-            )
-        
-        if dlg.ShowModal() == wx.ID_OK:
-            fullname = dlg.GetPaths()[0].split('/')
-            dp = '/'.join(fullname[:-1]) + '/'
-            fn = fullname[-1]
-            [df, p, vl] = openFile(dp+fn)
-            return [df, dp, fn, p, vl]
+        if pathToFile is None:            
+            app = wx.App(False)  # Create a new app, don't redirect stdout/stderr to a window.
+            frame = wx.Frame(None, wx.ID_ANY, "") # A Frame is a top-level window.
+            dlg = wx.FileDialog(frame,
+                                message="Choose a file",
+                                defaultFile="",
+                                wildcard=wildcard,
+                                style=wx.OPEN | wx.CHANGE_DIR
+                                )
+            if dlg.ShowModal() == wx.ID_OK:
+                pathToFile = dlg.GetPaths()[0].split('/')
+        else:
+            dp = '/'.join(pathToFile.split('/')[:-1])+'/'
+            fn = pathToFile.split('/')[-1]
+            [df, p, vl] = openFile(pathToFile)
+        return [df, dp, fn, p, vl]
             #startApp(df, dp, fn, ci, p, vl)
         frame.Destroy()
         app.Destroy()
@@ -867,7 +868,10 @@ if __name__ == '__main__':
     #dpa = '/home/jhdavis/data/2013_07_27-MSUABCD/'
     #fna = "msuD301_iso_res.csv"
     #[dfr, pul, vlab] = openFile(dpa+fna)
-    
-    [dfr, dpa, fna, pul, vlab] = fileOpenStart()
+    if len(sys.argv) > 1:
+        pathToFile = sys.argv[1]
+    else:
+        pathToFile=None
+    [dfr, dpa, fna, pul, vlab] = fileOpenStart(pathToFile)
     
     startApp(dfr, dpa, fna, pul, vlab)
