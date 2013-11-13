@@ -8,6 +8,8 @@ import pandas as pd
 import numpy
 import sys
 import matplotlib.gridspec as gridspec
+import vizLib
+import matplotlib
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_wxagg import \
     FigureCanvasWxAgg as FigCanvas, \
@@ -18,10 +20,10 @@ class MasseFrame(wx.Frame):
     """
     title = 'Masse filtering'
     
-    def __init__(self, df, dp, fn, pulse=False, varLab=False):
+    def __init__(self, df, dp, fn, pulse=False, varLab=False, fsize=1.0, size=1.0):
         wx.Frame.__init__(self, None, -1, self.title)                
         
-        self.create_main_panel(df, dp, fn, pulse=pulse, varLab=varLab)
+        self.create_main_panel(df, dp, fn, pulse=pulse, varLab=varLab, fsize=fsize, size=size)
         
         self.lowCheckNum.SetValue(True)
         self.lowCheckDen.SetValue(True)
@@ -51,12 +53,13 @@ class MasseFrame(wx.Frame):
             self.FRC_NXOn.SetValue(False)
         self.recalcAndDrawAll(setZero=True)
 
-    def create_main_panel(self, df, dp, fn, pulse=False, varLab=False):
+    def create_main_panel(self, df, dp, fn, pulse=False, varLab=False, fsize=1.0, size=1.0):
         """ Creates the main panel with all the controls on it:
              * mpl canvas 
              * mpl navigation toolbar
              * Control panel for interaction
         """
+        self.SetFont(wx.Font(10*size, wx.SWISS, wx.NORMAL, wx.NORMAL, False,'MS Shell Dlg 2'))
         self.calcNum = ["AMP_U"]
         self.calcDen = ["AMP_U", "AMP_S"]
         self.currentHist = "ppmDiff"
@@ -69,7 +72,7 @@ class MasseFrame(wx.Frame):
         self.datafile = fn
         self.pulse=pulse
         self.varLab=varLab
-        self.figdim = 7.5
+        self.figdim = 7.5*fsize
         self.positionLabels = qMS.sort_nicely(sorted(set(self.dataFrame['protein'].values)))
         
         self.panel = wx.Panel(self)
@@ -123,25 +126,25 @@ class MasseFrame(wx.Frame):
             self.midCheckDen = wx.CheckBox(self.panel, wx.ID_ANY, label="mid")
         self.highCheckDen = wx.CheckBox(self.panel, wx.ID_ANY, label="high")
 
-        self.ppmDiff_range_button = wx.Button(self.panel, wx.ID_ANY, "PPM diff")
-        self.N14_range_button = wx.Button(self.panel, wx.ID_ANY, "14N PPM")   
-        self.N15_range_button = wx.Button(self.panel, wx.ID_ANY, "15N PPM")
-        self.missed_range_button = wx.Button(self.panel, wx.ID_ANY, "Missed cleavage")
-        self.rtDiff_range_button = wx.Button(self.panel, wx.ID_ANY, "RT diff")
-        self.minIntensity_range_button = wx.Button(self.panel, wx.ID_ANY, "min intensity")
-        self.resid_range_button = wx.Button(self.panel, wx.ID_ANY, "residual")
-        self.ratio_range_button = wx.Button(self.panel, wx.ID_ANY, "amp[U/L] ratio")
+        self.ppmDiff_range_button = wx.Button(self.panel, wx.ID_ANY, "PPM diff",size=(75*size,-1))
+        self.N14_range_button = wx.Button(self.panel, wx.ID_ANY, "14N PPM", size=(75*size,-1))
+        self.N15_range_button = wx.Button(self.panel, wx.ID_ANY, "15N PPM", size=(75*size,-1))
+        self.missed_range_button = wx.Button(self.panel, wx.ID_ANY, "Missed cl.", size=(85*size,-1))
+        self.rtDiff_range_button = wx.Button(self.panel, wx.ID_ANY, "RT diff", size=(65*size,-1))
+        self.minIntensity_range_button = wx.Button(self.panel, wx.ID_ANY, "min inten.", size=(80*size,-1))
+        self.resid_range_button = wx.Button(self.panel, wx.ID_ANY, "resid.", size=(70*size,-1))
+        self.ratio_range_button = wx.Button(self.panel, wx.ID_ANY, "amp[U/L]", size=(80*size,-1))
         if self.varLab:
-            self.FRC_NX_range_button = wx.Button(self.panel, wx.ID_ANY, "FRC_NX")
+            self.FRC_NX_range_button = wx.Button(self.panel, wx.ID_ANY, "FRC_NX", size=(70*size,-1))
         
-        self.ppmDiffRangeBypass = wx.TextCtrl(self.panel, size=(75,-1),style=wx.TE_PROCESS_ENTER)
-        self.N14RangeBypass = wx.TextCtrl(self.panel, size=(75,-1),style=wx.TE_PROCESS_ENTER)
-        self.N15RangeBypass = wx.TextCtrl(self.panel, size=(75,-1),style=wx.TE_PROCESS_ENTER)
-        self.missedRangeBypass = wx.TextCtrl(self.panel, size=(75,-1),style=wx.TE_PROCESS_ENTER)
-        self.rtDiffRangeBypass = wx.TextCtrl(self.panel, size=(75,-1),style=wx.TE_PROCESS_ENTER)
-        self.residRangeBypass = wx.TextCtrl(self.panel, size=(75,-1),style=wx.TE_PROCESS_ENTER)
-        self.minIntensityBypass = wx.TextCtrl(self.panel, size=(75,-1),style=wx.TE_PROCESS_ENTER)
-        self.ratioLimBypass = wx.TextCtrl(self.panel, size=(75,-1),style=wx.TE_PROCESS_ENTER)
+        self.ppmDiffRangeBypass = wx.TextCtrl(self.panel, size=(75*size,-1),style=wx.TE_PROCESS_ENTER)
+        self.N14RangeBypass = wx.TextCtrl(self.panel, size=(75*size,-1),style=wx.TE_PROCESS_ENTER)
+        self.N15RangeBypass = wx.TextCtrl(self.panel, size=(75*size,-1),style=wx.TE_PROCESS_ENTER)
+        self.missedRangeBypass = wx.TextCtrl(self.panel, size=(75*size,-1),style=wx.TE_PROCESS_ENTER)
+        self.rtDiffRangeBypass = wx.TextCtrl(self.panel, size=(75*size,-1),style=wx.TE_PROCESS_ENTER)
+        self.residRangeBypass = wx.TextCtrl(self.panel, size=(75*size,-1),style=wx.TE_PROCESS_ENTER)
+        self.minIntensityBypass = wx.TextCtrl(self.panel, size=(75*size,-1),style=wx.TE_PROCESS_ENTER)
+        self.ratioLimBypass = wx.TextCtrl(self.panel, size=(75*size,-1),style=wx.TE_PROCESS_ENTER)
         if self.varLab:
             self.FRC_NXRangeBypass = wx.TextCtrl(self.panel, size=(75,-1),style=wx.TE_PROCESS_ENTER)
 
@@ -836,9 +839,9 @@ def openFile(fullpath):
     vla = 'FRC_NX' in dataFrame.columns
     return [dataFrame, puls, vla]
 
-def startApp(dataFrame, datapath, filename, pulse, varLab):
+def startApp(dataFrame, datapath, filename, pulse, varLab, fsize=1.0, size=1.0):
     app = wx.App()
-    app.frame = MasseFrame(dataFrame, datapath, filename, pulse=pulse, varLab=varLab)
+    app.frame = MasseFrame(dataFrame, datapath, filename, pulse=pulse, varLab=varLab, fsize=fsize, size=size)
     app.frame.Show()
     app.MainLoop()    
 
@@ -871,13 +874,16 @@ def fileOpenStart(pathToFile=None):
         dlg.Destroy()
 
 if __name__ == '__main__':
-    #dpa = '/home/jhdavis/data/2013_07_27-MSUABCD/'
-    #fna = "msuD301_iso_res.csv"
-    #[dfr, pul, vlab] = openFile(dpa+fna)
     if len(sys.argv) > 1:
         pathToFile=sys.argv[1]
     else:
         pathToFile=None
+    fsize=0.9
+    size=0.9
+    vizLib.setRcs(scale=size*12, tickScale=0.75)
+    axisFont = {'titlesize' : size*12*1.2,
+                'labelsize' : size*12*1.25}
+    matplotlib.rc('axes', **axisFont)
     [dfr, dpa, fna, pul, vlab] = fileOpenStart(pathToFile)
     
-    startApp(dfr, dpa, fna, pul, vlab)
+    startApp(dfr, dpa, fna, pul, vlab, fsize=fsize, size=size)
