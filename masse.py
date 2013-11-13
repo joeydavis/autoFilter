@@ -823,9 +823,14 @@ def transformValue(inputData, transformData, toTransform, normalizeTo):
     return inputTransformed
 
 def openFile(fullpath):
-    dataFrame = qMS.readIsoCSV(fullpath)
-    if not ('resid' in dataFrame.columns and 'minIntensity' in dataFrame.columns and 'ratio' in dataFrame.columns):
+    r = csv.reader(open(fullpath))
+    header = r.next()
+    
+    if not ('resid' in header and 'minIntensity' in header and 'ratio' in header and 'currentCalc' in header):
         dataFrame = qMS.preProcessIsoCSV(fullpath, True)
+    else:
+        dataFrame = qMS.readIsoCSV(fullpath)
+
     puls = 'AMP_L' in dataFrame.columns
     vla = 'FRC_NX' in dataFrame.columns
     return [dataFrame, puls, vla]
