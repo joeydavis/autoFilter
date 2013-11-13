@@ -827,9 +827,10 @@ def openFile(fullpath):
     header = r.next()
     
     if not ('resid' in header and 'minIntensity' in header and 'ratio' in header and 'currentCalc' in header):
+        print "preprocesing : " + fullpath + "..."
         dataFrame = qMS.preProcessIsoCSV(fullpath, True)
     else:
-        dataFrame = qMS.readIsoCSV(fullpath)
+        dataFrame = qMS.readIsoCSV(fullpath, noProcess=False)
 
     puls = 'AMP_L' in dataFrame.columns
     vla = 'FRC_NX' in dataFrame.columns
