@@ -853,13 +853,13 @@ def fileOpenStart(pathToFile=None):
                                 style=wx.OPEN | wx.CHANGE_DIR
                                 )
             if dlg.ShowModal() == wx.ID_OK:
-                pathToFile = dlg.GetPaths()[0].split('/')
-        else:
-            dp = '/'.join(pathToFile.split('/')[:-1])+'/'
-            fn = pathToFile.split('/')[-1]
-            [df, p, vl] = openFile(pathToFile)
+                pathToFile = dlg.GetPaths()[0]
+        hold = pathToFile
+        dp = '/'.join(hold.split('/')[:-1])+'/'
+        fn = hold.split('/')[-1]
+        print "opening file : " + pathToFile + "..."
+        [df, p, vl] = openFile(pathToFile)
         return [df, dp, fn, p, vl]
-            #startApp(df, dp, fn, ci, p, vl)
         frame.Destroy()
         app.Destroy()
         dlg.Destroy()
@@ -869,7 +869,7 @@ if __name__ == '__main__':
     #fna = "msuD301_iso_res.csv"
     #[dfr, pul, vlab] = openFile(dpa+fna)
     if len(sys.argv) > 1:
-        pathToFile = sys.argv[1]
+        pathToFile=sys.argv[1]
     else:
         pathToFile=None
     [dfr, dpa, fna, pul, vlab] = fileOpenStart(pathToFile)
