@@ -839,8 +839,18 @@ def openFile(fullpath):
     vla = 'FRC_NX' in dataFrame.columns
     return [dataFrame, puls, vla]
 
-def startApp(dataFrame, datapath, filename, pulse, varLab, fsize=1.0, size=1.0):
+def startApp(dataFrame, datapath, filename, pulse, varLab, fsize=None, size=None):
     app = wx.App()
+    screenSize = wx.DisplaySize()
+    if size is None:
+        size = 1.0*float(screenSize[0])/1600.0
+        fsize = 1.0*float(screenSize[0])/1600.0
+        print "detected screen resolution as " + str(screenSize[0]) + "; setting size=fsize="+str(round(size,2))+", these can be changed at bottom of masse.py if desired."
+    vizLib.setRcs(scale=size*12, tickScale=0.75*size)
+    axisFont = {'titlesize' : size*12*1.2,
+                'labelsize' : size*12*1.25}
+    matplotlib.rc('axes', **axisFont)
+
     app.frame = MasseFrame(dataFrame, datapath, filename, pulse=pulse, varLab=varLab, fsize=fsize, size=size)
     app.frame.Show()
     app.MainLoop()    
@@ -863,6 +873,7 @@ def fileOpenStart(pathToFile=None):
                                 )
             if dlg.ShowModal() == wx.ID_OK:
                 pathToFile = dlg.GetPaths()[0]
+
         hold = pathToFile
         dp = '/'.join(hold.split('/')[:-1])+'/'
         fn = hold.split('/')[-1]
@@ -878,12 +889,10 @@ if __name__ == '__main__':
         pathToFile=sys.argv[1]
     else:
         pathToFile=None
-    fsize=0.9
-    size=0.9
-    vizLib.setRcs(scale=size*12, tickScale=0.75)
-    axisFont = {'titlesize' : size*12*1.2,
-                'labelsize' : size*12*1.25}
-    matplotlib.rc('axes', **axisFont)
+    #fsize=1
+    #size=1
+    fsize=None
+    size=None
     [dfr, dpa, fna, pul, vlab] = fileOpenStart(pathToFile)
     
     startApp(dfr, dpa, fna, pul, vlab, fsize=fsize, size=size)
