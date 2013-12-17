@@ -36,6 +36,7 @@ class MasseFrame(wx.Frame):
         self.residRangeBypass.SetValue('0 5000')
         self.minIntensityBypass.SetValue('100')
         self.ratioLimBypass.SetValue('0.1 10')
+        self.gwBypass.SetValue('0 1')
 
         self.ppmDiffOn.SetValue(False)
         self.N14On.SetValue(False)
@@ -47,6 +48,7 @@ class MasseFrame(wx.Frame):
         self.ratioLimOn.SetValue(False)
         self.handSaveOn.SetValue(False)
         self.handDeleteOn.SetValue(False)
+        self.gwOn.SetValue(False)
         
         if self.varLab:
             self.FRC_NXRangeBypass.SetValue('0 1')
@@ -59,6 +61,8 @@ class MasseFrame(wx.Frame):
              * mpl navigation toolbar
              * Control panel for interaction
         """
+        self.fsize = fsize
+        self.size = size
         self.SetFont(wx.Font(10*size, wx.SWISS, wx.NORMAL, wx.NORMAL, False,'MS Shell Dlg 2'))
         self.calcNum = ["AMP_U"]
         self.calcDen = ["AMP_U", "AMP_S"]
@@ -134,6 +138,7 @@ class MasseFrame(wx.Frame):
         self.minIntensity_range_button = wx.Button(self.panel, wx.ID_ANY, "min inten.", size=(80*size,-1))
         self.resid_range_button = wx.Button(self.panel, wx.ID_ANY, "resid.", size=(70*size,-1))
         self.ratio_range_button = wx.Button(self.panel, wx.ID_ANY, "amp[U/L]", size=(80*size,-1))
+        self.gw_range_button = wx.Button(self.panel, wx.ID_ANY, "GW", size=(50*size,-1))
         if self.varLab:
             self.FRC_NX_range_button = wx.Button(self.panel, wx.ID_ANY, "FRC_NX", size=(70*size,-1))
         
@@ -145,6 +150,7 @@ class MasseFrame(wx.Frame):
         self.residRangeBypass = wx.TextCtrl(self.panel, size=(75*size,-1),style=wx.TE_PROCESS_ENTER)
         self.minIntensityBypass = wx.TextCtrl(self.panel, size=(75*size,-1),style=wx.TE_PROCESS_ENTER)
         self.ratioLimBypass = wx.TextCtrl(self.panel, size=(75*size,-1),style=wx.TE_PROCESS_ENTER)
+        self.gwBypass = wx.TextCtrl(self.panel, size=(75*size,-1),style=wx.TE_PROCESS_ENTER)
         if self.varLab:
             self.FRC_NXRangeBypass = wx.TextCtrl(self.panel, size=(75,-1),style=wx.TE_PROCESS_ENTER)
 
@@ -160,6 +166,7 @@ class MasseFrame(wx.Frame):
             self.FRC_NXOn = wx.CheckBox(self.panel, wx.ID_ANY, label="FRC_NX")
         self.handSaveOn = wx.CheckBox(self.panel, wx.ID_ANY, label="curated_save")
         self.handDeleteOn = wx.CheckBox(self.panel, wx.ID_ANY, label="curated_remove")
+        self.gwOn = wx.CheckBox(self.panel, wx.ID_ANY, label="GW")
         
         '''lay out the buttons'''
         self.vbox = wx.BoxSizer(wx.VERTICAL)
@@ -263,6 +270,8 @@ class MasseFrame(wx.Frame):
         self.filterBox.Add(self.minIntensityBypass, 0, flag = flags)
         self.filterBox.Add(self.ratio_range_button, 0, flag=flags)
         self.filterBox.Add(self.ratioLimBypass, 0, flag = flags)
+        self.filterBox.Add(self.gw_range_button, 0, flag=flags)
+        self.filterBox.Add(self.gwBypass, 0, flag = flags)
         self.vbox.Add(self.filterBox, 0, flag = wx.ALIGN_LEFT | wx.TOP)
         
         # Filters on/off checks
@@ -279,6 +288,7 @@ class MasseFrame(wx.Frame):
         self.controlFilters.Add(self.handSaveOn, 0, flag = wx.ALIGN_RIGHT | wx.ALIGN_CENTER)
         self.controlFilters.Add(self.handDeleteOn, 0, flag = wx.ALIGN_RIGHT | wx.ALIGN_CENTER)
         self.controlFilters.Add(self.ratioLimOn, 0, flag = wx.ALIGN_RIGHT | wx.ALIGN_CENTER)
+        self.controlFilters.Add(self.gwOn, 0, flag = wx.ALIGN_RIGHT | wx.ALIGN_CENTER)
         self.vbox.Add(self.controlFilters, 0, flag = wx.ALIGN_LEFT | wx.TOP)
 
         self.panel.SetSizer(self.vbox)
@@ -310,6 +320,7 @@ class MasseFrame(wx.Frame):
         self.resid_range_button.Bind(wx.EVT_BUTTON, self.on_resid_range_button)
         self.minIntensity_range_button.Bind(wx.EVT_BUTTON, self.on_minIntensity_range_button)
         self.ratio_range_button.Bind(wx.EVT_BUTTON, self.on_ratio_range_button)
+        self.gw_range_button.Bind(wx.EVT_BUTTON, self.on_gw_range_button)
         if self.varLab:
             self.FRC_NX_range_button.Bind(wx.EVT_BUTTON, self.on_FRC_NX_range_button)
         
@@ -323,6 +334,7 @@ class MasseFrame(wx.Frame):
         self.handSaveOn.Bind(wx.EVT_CHECKBOX, self.on_handSaveOn)
         self.handDeleteOn.Bind(wx.EVT_CHECKBOX, self.on_handDeleteOn)
         self.ratioLimOn.Bind(wx.EVT_CHECKBOX, self.on_ratioLimOn)
+        self.gwOn.Bind(wx.EVT_CHECKBOX, self.on_gwOn)
         if self.varLab:
             self.FRC_NXOn.Bind(wx.EVT_CHECKBOX, self.on_FRC_NXOn)
         
@@ -360,6 +372,8 @@ class MasseFrame(wx.Frame):
             self.FRC_NXRangeBypass.SetValue(pdict['FRC_NX_low'] + ' ' + pdict['FRC_NX_high'])
             self.FRC_NXOn.SetValue(qMS.boolParse(pdict['FRC_NX']))
         self.residRangeBypass.SetValue(pdict['resid_low'] + ' ' + pdict['resid_high'])
+        self.ratioLimBypass.SetValue(pdict['ratio_low'] + ' ' + pdict['ratio_high'])
+        self.gwBypass.SetValue(pdict['GW_low'] + ' ' + pdict['GW_high'])
         self.minIntensityBypass.SetValue(pdict['minIntensity'])
 
         self.ppmDiffOn.SetValue(qMS.boolParse(pdict['ppmDiff']))
@@ -368,6 +382,8 @@ class MasseFrame(wx.Frame):
         self.missedOn.SetValue(qMS.boolParse(pdict['missed']))
         self.rtOn.SetValue(qMS.boolParse(pdict['rtDiff']))
         self.residOn.SetValue(qMS.boolParse(pdict['resid']))
+        self.ratioLimOn.SetValue(qMS.boolParse(pdict['ratio']))
+        self.gwOn.SetValue(qMS.boolParse(pdict['GW']))
         self.minIntensityOn.SetValue(qMS.boolParse(pdict['minIntensityOn']))
         self.handSaveOn.SetValue(qMS.boolParse(pdict['handSaveOn']))
         self.handDeleteOn.SetValue(qMS.boolParse(pdict['handDeleteOn']))
@@ -385,6 +401,8 @@ class MasseFrame(wx.Frame):
         if self.varLab:
             (FRC_NX_low, FRC_NX_high) = map(str, self.FRC_NXRangeBypass.GetValue().split(' '))
         (resid_low, resid_high) = map(str, self.residRangeBypass.GetValue().split(' '))
+        (ratio_low, ratio_high) = map(str, self.ratioLimBypass.GetValue().split(' '))
+        (gw_low, gw_high) = map(str, self.gwBypass.GetValue().split(' '))
         minI = float(self.minIntensityBypass.GetValue())
 
         outstr = 'param,' + 'value'
@@ -398,6 +416,8 @@ class MasseFrame(wx.Frame):
             outstr = outstr + '\nFRC_NX_low,' + FRC_NX_low + '\nFRC_NX_high,' + FRC_NX_high
             outstr = outstr + '\nFRC_NX,' + str(self.FRC_NXOn.IsChecked())
         outstr = outstr + '\nresid_low,' + resid_low + '\nresid_high,' + resid_high
+        outstr = outstr + '\nratio_low,' + ratio_low + '\nratio_high,' + ratio_high
+        outstr = outstr + '\nGW_low,' + gw_low + '\nGW_high,' + gw_high
         outstr = outstr + '\nminIntensity,' + str(minI)
         
         outstr = outstr + '\ngridChecked,' + str(self.cb_grid.IsChecked())
@@ -419,6 +439,8 @@ class MasseFrame(wx.Frame):
         outstr = outstr + '\nmissed,' + str(self.missedOn.IsChecked())
         outstr = outstr + '\nrtDiff,' + str(self.rtOn.IsChecked())
         outstr = outstr + '\nresid,' + str(self.residOn.IsChecked())
+        outstr = outstr + '\nratio,' + str(self.ratioLimOn.IsChecked())
+        outstr = outstr + '\nGW,' + str(self.gwOn.IsChecked())
         outstr = outstr + '\nminIntensityOn,' + str(self.minIntensityOn.IsChecked())
         outstr = outstr + '\nhandSaveOn,' + str(self.handSaveOn.IsChecked())
         outstr = outstr + '\nhandDeleteOn,' + str(self.handDeleteOn.IsChecked())
@@ -468,7 +490,7 @@ class MasseFrame(wx.Frame):
             self.currentDirectory = dpa
             fna = fullname[-1]
             [dfr, pul, vlab] = openFile(dpa+fna)
-            startApp(dfr, dpa, fna, pul, vlab)
+            startApp(dfr, dpa, fna, pul, vlab, fsize=self.fsize, size=self.size)
 
         dlg.Destroy()
     def on_export_button(self, event):
@@ -528,6 +550,9 @@ class MasseFrame(wx.Frame):
     def on_ratio_range_button(self, event):
         self.currentHist = "ratio"
         self.recalcAndDrawAll()
+    def on_gw_range_button(self, event):
+        self.currentHist = "GW"
+        self.recalcAndDrawAll()
     def on_calc_button(self, event):
         self.recalcAndDrawAll()
 
@@ -552,6 +577,8 @@ class MasseFrame(wx.Frame):
     def on_handSaveOn(self, event):
         self.recalcAndDrawAll()
     def on_handDeleteOn(self, event):
+        self.recalcAndDrawAll()
+    def on_gwOn(self, event):
         self.recalcAndDrawAll()
 
     def on_exit(self, event):
@@ -681,6 +708,8 @@ class MasseFrame(wx.Frame):
                         "\nmissed: " + str(row['missed'].values[0]) + " : " + str(passing['missed']) +\
                         "\nrtDiff: " + str(round(row['rtDiff'].values[0],3)) + " : " + str(passing['rtDiff']) +\
                         "\nresid: " + str(round(row['resid'].values[0],1)) + " : " + str(passing['resid']) +\
+                        "\nratio: " + str(round(row['ratio'].values[0],1)) + " : " + str(passing['ratio']) +\
+                        "\ngw: " + str(round(row['GW'].values[0],6)) + " : " + str(passing['GW']) +\
                         "\nintensity: " + str(round(row['minIntensity'].values[0],1)) + " : " + str(passing['minIntensity']) +\
                         "\ncurrentCalc: " + str(round(row['currentCalc'].values[0],1))
                         
@@ -747,6 +776,7 @@ class MasseFrame(wx.Frame):
         (self.rtDiff_low, self.rtDiff_high) = map(float, self.rtDiffRangeBypass.GetValue().split(' '))
         (self.resid_low, self.resid_high) = map(float, self.residRangeBypass.GetValue().split(' '))
         (self.ratio_low, self.ratio_high) = map(float, self.ratioLimBypass.GetValue().split(' '))
+        (self.gw_low, self.gw_high) = map(float, self.gwBypass.GetValue().split(' '))
         self.minIntensity = float(self.minIntensityBypass.GetValue())
         if self.varLab:
             (self.FRC_NX_low, self.FRC_NX_high) = map(float, self.FRC_NXRangeBypass.GetValue().split(' '))
@@ -763,6 +793,7 @@ class MasseFrame(wx.Frame):
         passing['resid'] = (row['resid'].values[0] >= self.resid_low) and (row['resid'].values[0] <= self.resid_high) 
         passing['minIntensity'] = (row['minIntensity'].values[0] >= self.minIntensity)
         passing['ratio'] = (row['ratio'].values[0] >= self.ratio_low) and (row['ratio'].values[0] <= self.ratio_high) 
+        passing['GW'] = (row['GW'].values[0] >= self.gw_low) and (row['GW'].values[0] <= self.gw_high) 
         if self.varLab:
             passing['FRC_NX'] = (row['FRC_NX'].values[0] >= self.FRC_NX_low) and (row['FRC_NX'].values[0] <= self.FRC_NX_high)
         return passing
@@ -784,6 +815,8 @@ class MasseFrame(wx.Frame):
             filt = filt & (self.dataFrame['resid'] >= self.resid_low) & (self.dataFrame['resid'] <= self.resid_high)
         if self.ratioLimOn.IsChecked():
             filt = filt & (self.dataFrame['ratio'] >= self.ratio_low) & (self.dataFrame['ratio'] <= self.ratio_high)
+        if self.gwOn.IsChecked():
+            filt = filt & (self.dataFrame['GW'] >= self.gw_low) & (self.dataFrame['GW'] <= self.gw_high)
         if self.minIntensityOn.IsChecked():
             filt = filt & (self.dataFrame['minIntensity'] >= self.minIntensity)
         if self.varLab:
@@ -889,10 +922,10 @@ if __name__ == '__main__':
         pathToFile=sys.argv[1]
     else:
         pathToFile=None
-    #fsize=1
-    #size=1
-    fsize=None
-    size=None
+    fsize=1.0
+    size=1.0
+    #fsize=None
+    #size=None
     [dfr, dpa, fna, pul, vlab] = fileOpenStart(pathToFile)
     
     startApp(dfr, dpa, fna, pul, vlab, fsize=fsize, size=size)
