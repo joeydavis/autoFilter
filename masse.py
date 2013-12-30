@@ -715,7 +715,7 @@ class MasseFrame(wx.Frame):
                         
         if self.varLab:
             dataString = dataString + "\nFRC_NX: " + str(round(row['FRC_NX'].values[0],3)) + " : " + str(passing['FRC_NX'])
-        self.PNGPlot.text(0.98, 0.4,dataString,
+        self.PNGPlot.text(0.98, 0.45,dataString,
                           horizontalalignment='right',
                           verticalalignment='top',
                           transform = self.PNGPlot.transAxes,
