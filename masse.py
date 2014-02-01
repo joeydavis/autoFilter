@@ -376,10 +376,8 @@ class MasseFrame(wx.Frame):
             muFRCNX = self.dataFrame['FRC_NX'].median()
             varFRCNX = self.dataFrame['FRC_NX'].std()
         
-        muRatio = self.dataFrame['ratio'].median()
-        print muRatio
-        varRatio = self.dataFrame['ratio'].std()
-        print varRatio
+        muRatio = self.savedPoints['ratio'].median()
+        varRatio = self.savedPoints['ratio'].std()
         
         self.ppmDiffRangeBypass.SetValue(str(round(muPPM-stds*varPPM,2)) + ' ' + str(round(muPPM+stds*varPPM,2)))
         self.N14RangeBypass.SetValue(str(round(mu14PPM-stds*var14PPM,2)) + ' ' + str(round(muPPM+stds*var14PPM,2)))
