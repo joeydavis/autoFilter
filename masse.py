@@ -117,8 +117,11 @@ class MasseFrame(wx.Frame):
         
         self.savePButton = wx.Button(self.panel, wx.ID_ANY, "Save")
         self.loadPButton = wx.Button(self.panel, wx.ID_ANY, "Load")
+        self.N1Button = wx.Button(self.panel, wx.ID_ANY, "N1", size=(29*size,-1))
+        self.N2Button = wx.Button(self.panel, wx.ID_ANY, "N2", size=(29*size,-1))
+        self.N3Button = wx.Button(self.panel, wx.ID_ANY, "N3", size=(29*size,-1))
         
-        self.calcButton = wx.Button(self.panel, wx.ID_ANY, "Calculate")
+        self.calcButton = wx.Button(self.panel, wx.ID_ANY, "Calculate", size=(57*size,40))
         
         self.lowCheckNum = wx.CheckBox(self.panel, wx.ID_ANY, label="low")
         if self.pulse:
@@ -217,12 +220,19 @@ class MasseFrame(wx.Frame):
         #add loadP/SaveP buttons
         self.paramBox = wx.StaticBoxSizer(wx.StaticBox(self.panel,wx.ID_ANY,'filterParams'), wx.VERTICAL)
         self.paramBox.Add(self.loadPButton, 0, flag=wx.ALIGN_LEFT)
-        self.saveBox = wx.BoxSizer(wx.HORIZONTAL)
         self.paramBox.Add(self.savePButton, 0, flag=wx.ALIGN_LEFT)
         self.toolNumBox.Add(self.paramBox, 0, flag=wx.ALIGN_RIGHT | wx.GROW)
         
+        
         #add calculate button
-        self.toolNumBox.Add(self.calcButton, 0, flag=wx.ALIGN_RIGHT | wx.GROW)
+        self.calcNBox = wx.StaticBoxSizer(wx.StaticBox(self.panel,wx.ID_ANY,'calcDist'), wx.VERTICAL)
+        self.calcNBox.Add(self.calcButton, flag=wx.ALIGN_TOP | wx.GROW)
+        self.NBox = wx.BoxSizer(wx.HORIZONTAL)
+        self.NBox.Add(self.N1Button, 0, flag=wx.ALIGN_LEFT)
+        self.NBox.Add(self.N2Button, 0, flag=wx.ALIGN_LEFT)
+        self.NBox.Add(self.N3Button, 0, flag=wx.ALIGN_LEFT)
+        self.calcNBox.Add(self.NBox, 0, flag=wx.ALIGN_TOP)
+        self.toolNumBox.Add(self.calcNBox, 0, flag=wx.ALIGN_RIGHT | wx.GROW)
         
         #add numerator box to hbox
         self.numBox = wx.StaticBoxSizer(wx.StaticBox(self.panel,wx.ID_ANY,'num'), wx.VERTICAL)
@@ -311,6 +321,9 @@ class MasseFrame(wx.Frame):
         
         self.loadPButton.Bind(wx.EVT_BUTTON, self.on_loadP_button)
         self.savePButton.Bind(wx.EVT_BUTTON, self.on_saveP_button)
+        self.N1Button.Bind(wx.EVT_BUTTON, self.on_N1_button)
+        self.N2Button.Bind(wx.EVT_BUTTON, self.on_N2_button)
+        self.N3Button.Bind(wx.EVT_BUTTON, self.on_N3_button)
 
         self.ppmDiff_range_button.Bind(wx.EVT_BUTTON, self.on_ppmDiff_range_button)
         self.N14_range_button.Bind(wx.EVT_BUTTON, self.on_N14_range_button)
@@ -342,6 +355,39 @@ class MasseFrame(wx.Frame):
         self.filteredList.Bind(wx.EVT_LISTBOX, self.on_filteredBoxClick)
         
         self.panel.Bind(wx.EVT_KEY_UP, self.on_key_press)
+
+    def on_N1_button(self, event):
+        self.setNormalValues(1.0)
+    def on_N2_button(self, event):
+        self.setNormalValues(2.0)
+    def on_N3_button(self, event):
+        self.setNormalValues(3.0)
+    def setNormalValues(self, stds):
+        muPPM = self.dataFrame['ppmDiff'].median()
+        varPPM = self.dataFrame['ppmDiff'].std()
+        
+        mu14PPM = self.dataFrame['ppm_n14'].median()
+        var14PPM = self.dataFrame['ppm_n14'].std()
+        
+        mu15PPM = self.dataFrame['ppm_n15'].median()
+        var15PPM = self.dataFrame['ppm_n15'].std()
+        
+        if self.varLab:
+            muFRCNX = self.dataFrame['FRC_NX'].median()
+            varFRCNX = self.dataFrame['FRC_NX'].std()
+        
+        muRatio = self.dataFrame['ratio'].median()
+        print muRatio
+        varRatio = self.dataFrame['ratio'].std()
+        print varRatio
+        
+        self.ppmDiffRangeBypass.SetValue(str(round(muPPM-stds*varPPM,2)) + ' ' + str(round(muPPM+stds*varPPM,2)))
+        self.N14RangeBypass.SetValue(str(round(mu14PPM-stds*var14PPM,2)) + ' ' + str(round(muPPM+stds*var14PPM,2)))
+        self.N15RangeBypass.SetValue(str(round(mu15PPM-stds*var15PPM,2)) + ' ' + str(round(muPPM+stds*var15PPM,2)))
+        self.ratioLimBypass.SetValue(str(round(muRatio-stds*varRatio,2)) + ' ' + str(round(muRatio+stds*varRatio,2)))
+        
+        if self.varLab:
+            self.FRC_NXRangeBypass.SetValue(str(round(muFRCNX-stds*varFRCNX,2)) + ' ' + str(round(muFRCNX+stds*varFRCNX,2)))
 
     def on_loadP_button(self, event):
         f = open(self.datapath+'_last.filterParam', 'r')
