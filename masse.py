@@ -118,8 +118,8 @@ class MasseFrame(wx.Frame):
         self.savePButton = wx.Button(self.panel, wx.ID_ANY, "Save")
         self.loadPButton = wx.Button(self.panel, wx.ID_ANY, "Load")
         self.N1Button = wx.Button(self.panel, wx.ID_ANY, "N1", size=(29*size,-1))
-        self.N2Button = wx.Button(self.panel, wx.ID_ANY, "N2", size=(29*size,-1))
-        self.N3Button = wx.Button(self.panel, wx.ID_ANY, "N3", size=(29*size,-1))
+        self.N2Button = wx.Button(self.panel, wx.ID_ANY, "1.5", size=(33*size,-1))
+        self.N3Button = wx.Button(self.panel, wx.ID_ANY, "2", size=(24*size,-1))
         
         self.calcButton = wx.Button(self.panel, wx.ID_ANY, "Calculate", size=(57*size,40))
         
@@ -359,30 +359,32 @@ class MasseFrame(wx.Frame):
     def on_N1_button(self, event):
         self.setNormalValues(1.0)
     def on_N2_button(self, event):
-        self.setNormalValues(2.0)
+        self.setNormalValues(1.5)
     def on_N3_button(self, event):
-        self.setNormalValues(3.0)
+        self.setNormalValues(2.0)
     def setNormalValues(self, stds):
         muPPM = self.dataFrame['ppmDiff'].median()
         varPPM = self.dataFrame['ppmDiff'].std()
         
         mu14PPM = self.dataFrame['ppm_n14'].median()
         var14PPM = self.dataFrame['ppm_n14'].std()
+        mu14PPM = self.dataFrame[(self.dataFrame['ppm_n14'] > mu14PPM-3*var14PPM) & (self.dataFrame['ppm_n14'] < mu14PPM+3*var14PPM)]['ppm_n14'].median()
         
         mu15PPM = self.dataFrame['ppm_n15'].median()
         var15PPM = self.dataFrame['ppm_n15'].std()
+        mu15PPM = self.dataFrame[(self.dataFrame['ppm_n15'] > mu15PPM-3*var15PPM) & (self.dataFrame['ppm_n15'] < mu15PPM+3*var15PPM)]['ppm_n15'].median()
         
         if self.varLab:
             muFRCNX = self.dataFrame['FRC_NX'].median()
             varFRCNX = self.dataFrame['FRC_NX'].std()
         
-        muRatio = self.savedPoints['ratio'].median()
-        varRatio = self.savedPoints['ratio'].std()
+        muRatio = self.dataFrame[(self.dataFrame['ratio'] > 0) & (self.dataFrame['ratio'] < 20)]['ratio'].median()
+        varRatio = self.dataFrame[(self.dataFrame['ratio'] > 0) & (self.dataFrame['ratio'] < 20)]['ratio'].std()
         
         self.ppmDiffRangeBypass.SetValue(str(round(muPPM-stds*varPPM,2)) + ' ' + str(round(muPPM+stds*varPPM,2)))
-        self.N14RangeBypass.SetValue(str(round(mu14PPM-stds*var14PPM,2)) + ' ' + str(round(muPPM+stds*var14PPM,2)))
-        self.N15RangeBypass.SetValue(str(round(mu15PPM-stds*var15PPM,2)) + ' ' + str(round(muPPM+stds*var15PPM,2)))
-        self.ratioLimBypass.SetValue(str(round(muRatio-stds*varRatio,2)) + ' ' + str(round(muRatio+stds*varRatio,2)))
+        self.N14RangeBypass.SetValue(str(round(mu14PPM-stds*var14PPM,2)) + ' ' + str(round(mu14PPM+stds*var14PPM,2)))
+        self.N15RangeBypass.SetValue(str(round(mu15PPM-stds*var15PPM,2)) + ' ' + str(round(mu15PPM+stds*var15PPM,2)))
+        #self.ratioLimBypass.SetValue(str(round(muRatio-stds*varRatio,2)) + ' ' + str(round(muRatio+stds*varRatio,2)))
         
         if self.varLab:
             self.FRC_NXRangeBypass.SetValue(str(round(muFRCNX-stds*varFRCNX,2)) + ' ' + str(round(muFRCNX+stds*varFRCNX,2)))
