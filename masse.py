@@ -649,6 +649,16 @@ class MasseFrame(wx.Frame):
             row = self.dataFrame[self.dataFrame['isofile'] == self.currentISOFile]
             row['handDelete'] = True
             row['handSave'] = False
+
+            myIndex = list(self.savedListItems).index(self.currentISOFile)
+            try:
+                nextItem = self.savedListItems[myIndex+1]
+            except IndexError:
+                nextItem = self.savedListItems[myIndex-1]
+            self.currentISOFile = nextItem
+            self.currentRow = self.dataFrame[self.dataFrame['isofile'] == self.currentISOFile]
+
+            self.newSelection()            
             self.dataFrame.update(row)
             self.recalcAndDrawAll()
             
@@ -968,10 +978,10 @@ if __name__ == '__main__':
         pathToFile=sys.argv[1]
     else:
         pathToFile=None
-    fsize=1.0
-    size=1.0
-    #fsize=None
-    #size=None
+    #fsize=0.5
+    #size=1.0
+    fsize=None
+    size=None
     [dfr, dpa, fna, pul, vlab] = fileOpenStart(pathToFile)
     
     startApp(dfr, dpa, fna, pul, vlab, fsize=fsize, size=size)
