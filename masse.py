@@ -746,7 +746,9 @@ class MasseFrame(wx.Frame):
         df2 = pd.read_csv(txtfile, header=None, sep=' ')
         del df['residAdj']
         self.PNGPlot.clear()
-        self.PNGPlot.plot(df2[0][0:len(df['dat'])].values, df['dat'].values, 'o', markersize=8, label='data', markerfacecolor='None', markeredgecolor='red')
+        #self.PNGPlot.plot(df2[0][0:len(df['dat'])].values, df['dat'].values, 'o', markersize=3, label='data', markerfacecolor='None', markeredgecolor='red')
+        self.PNGPlot.plot(df2[0][0:len(df['dat'])].values, df['dat'].values, 'o', markersize=6, markerfacecolor='None', markeredgecolor='red')
+        self.PNGPlot.plot(df2[0][0:len(df['dat'])].values, df['dat'].values, 'r-', linewidth=2, label='data')
         self.PNGPlot.plot(df2[0][0:len(df['fit'])].values, df['fit'].values, 'b-', linewidth=2, label='fit')
         self.PNGPlot.plot(df2[0][0:len(df['resid'])].values, df['resid'].values, 'g-', linewidth=2, label='residual')
         self.PNGPlot.set_xlabel('m/z')
