@@ -702,9 +702,11 @@ class MasseFrame(wx.Frame):
 
     def updateLists(self):
         self.savedListItems = self.savedPoints['isofile'].values
-        self.savedListItems.sort()
+        sli = qMS.sort_nicely(list(self.savedListItems))
+        self.savedListItems = numpy.array(sli)
         self.filteredListItems = self.filteredPoints['isofile'].values
-        self.filteredListItems.sort()
+        fli = qMS.sort_nicely(list(self.filteredListItems))
+        self.filteredListItems = numpy.array(fli)
         self.savedList.Set(self.savedListItems)
         self.filteredList.Set(self.filteredListItems)
         self.savedList.SetStringSelection(self.currentISOFile)
