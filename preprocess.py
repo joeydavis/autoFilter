@@ -9,6 +9,7 @@ import qMS
 import glob
 import sys
 
+pd.options.mode.chained_assignment = None
 processDirectory = str(sys.argv[1])
 listToProcess=glob.glob(processDirectory+'/*_iso.csv')
 for f in listToProcess:
