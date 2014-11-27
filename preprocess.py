@@ -8,7 +8,7 @@ Created on Sun Jun  8 10:25:03 2014
 import qMS
 import glob
 import sys
-
+import pandas as pd
 pd.options.mode.chained_assignment = None
 processDirectory = str(sys.argv[1])
 listToProcess=glob.glob(processDirectory+'/*_iso.csv')
