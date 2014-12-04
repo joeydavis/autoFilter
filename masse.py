@@ -801,7 +801,7 @@ class MasseFrame(wx.Frame):
         
         bin_num = min(30, len(list(set(dataSelected))))
         self.histPlotSelected.clear()
-        self.histPlotSelected.hist(dataSelected, bins = bin_num)
+        self.histPlotSelected.hist(dataSelected.values, bins = bin_num)
         self.histPlotSelected.text(0.05,0.75,name+'_Selected', transform=self.histPlotSelected.transAxes)
     
     def draw_all(self):
