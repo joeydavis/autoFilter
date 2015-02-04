@@ -329,7 +329,7 @@ class MasseFrame(wx.Frame):
         self.ldpOn.Bind(wx.EVT_CHECKBOX, self.on_ldpOn)
         self.ratioLimOn.Bind(wx.EVT_CHECKBOX, self.on_ratioLimOn)
         
-        self.datasetsList.Bind(wx.EVT_LISTBOX, self.on_datasetsBoxClick)        
+        self.datasetsList.Bind(wx.EVT_LISTBOX, self.on_datasetsBoxClick)
         self.savedList.Bind(wx.EVT_LISTBOX, self.on_savedBoxClick)
         self.filteredList.Bind(wx.EVT_LISTBOX, self.on_filteredBoxClick)
         
