@@ -13,14 +13,14 @@ import sys
 
 
 def readFileListing(fileListString):
-    fileList = [i.rstrip() for i in open(fileListString).readlines()]
+    fileList = [i.rstrip().split(',') for i in open(fileListString).readlines()]
     return fileList
 
 def readSingleIsoCSV(path, shortName=None):
     dataset = qMS.readIsoCSV(path)
     if shortName is None:
         shortName = path
-    dataset['originFile'] = shortName
+    dataset['shortName'] = shortName
 
     s = '_'
     dataset['UID'] =  dataset['originFile'] +s+ dataset['protein'] +s+ dataset['startres'].map(str).str.split('.').str[0] +s+\
@@ -46,6 +46,6 @@ if __name__ == '__main__':
     
     fullDataset = pandas.DataFrame()
     for f in fileList:
-        sn = f.split('/')[-1].split('_')[0]
-        fullDataset = fullDataset.append(readSingleIsoCSV(f, shortName=sn), ignore_index=True)
+        sn = f[1]
+        fullDataset = fullDataset.append(readSingleIsoCSV(f[0], shortName=sn), ignore_index=True)
     fullDataset.to_csv(outputFileString, index=False)

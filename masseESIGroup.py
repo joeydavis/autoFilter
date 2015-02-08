@@ -15,7 +15,7 @@ from matplotlib.backends.backend_wxagg import \
     FigureCanvasWxAgg as FigCanvas, \
     NavigationToolbar2WxAgg as NavigationToolbar
 
-FILENAMEHEADER = 'originFile'
+FILENAMEHEADER = 'shortName'
 UIDHEADER = 'UID'
 ISOFILEHEADER = 'isofile'
 PROTEINHEADER = 'protein'
@@ -337,8 +337,21 @@ class MasseFrame(wx.Frame):
             self.redrawAll()
             self.dataFrame['priorFilter'] = self.dataFrame['allFPass']
             self.dataFrame.to_csv(path, index=False)
+            summaryCSVPath = path.split('.')[0] + '_median_[' + ''.join(self.calcNum) + ']_[' + ''.join(self.calcDen) + '].csv'
+            self.writeSummaryCSV(summaryCSVPath)
+            
         dlg.Destroy()
 
+    def writeSummaryCSV(self, path):
+        csvDict = {}
+        proteins = qMS.sort_nicely(sorted(set(self.dataFrame[PROTEINHEADER].values)))
+        fractions = qMS.sort_nicely(sorted(set(self.dataFrame[FILENAMEHEADER].values)))
+        for frac in fractions:
+            csvDict[frac] = pandas.Series([self.dataFrame[(self.dataFrame[FILENAMEHEADER] == frac) & \
+                                        (self.dataFrame[PROTEINHEADER] == i)] \
+                                        ['currentCalc'].median() for i in proteins], index=proteins)
+        summaryDF = pandas.DataFrame(csvDict, columns = fractions)
+        summaryDF.to_csv(path)
     def on_exit(self, event):
         self.Destroy()
     
@@ -554,7 +567,7 @@ class MasseFrame(wx.Frame):
     def determineMedians(self, view, field):
         xs = list(set(view[field]))
         ys = [view[view[field]==k]['currentCalc'].median() for k in xs]
-        xs = [float(i)+0.5 for i in xs]
+        xs = [float(i) for i in xs]
         return [xs,ys]
        
     def calc_figureLeft(self):
@@ -778,7 +791,7 @@ if __name__ == '__main__':
         pathToFile=sys.argv[1]
     else:
         pathToFile=None
-    pathToFile = '/home/jhdavis/data/compiledDeps/L17Unfilt/L17_1FractionListMergedNew_iso_res.csv'
+    #pathToFile = '/home/jhdavis/data/compiledDeps/L17Unfilt/L17_1FractionListMergedNew_iso_res.csv'
     fsize=None
     size=None
     [dfr, dpa, fna, pul, vlab] = fileOpenStart(pathToFile)
